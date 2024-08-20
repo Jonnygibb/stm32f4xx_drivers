@@ -59,3 +59,43 @@ int main(void)
 ```
 
 This code configures the HSI clock as the MCU’s clock
+
+## Pre-processor Directives and Operator Precedence
+
+The use of brackets is important in pre-processor directives since in a macro, the parameters are replaced into the macro in place. This has little effect on something like a memory address in the example below but is good practise regardless.
+
+```c
+/*
+ * Define the base addresses for AHBx and APBx Peripheral busses.
+ */
+
+#define PERIPH_BASEADDR				0x40000000U // Peripheral busses Base Address.
+#define APB1PERIPH_BASEADDR			PERIPH_BASEADDR // APB1 Peripheral bus Base Address.
+#define APB2PERIPH_BASEADDR			0x40010000U // APB2 Peripheral bus Base Address.
+#define AHB1PERIPH_BASEADDR			0x40020000U // AHB1 Peripheral bus Base Address.
+#define AHB2PERIPH_BASEADDR			0x50000000U // AHB2 Peripheral bus Base Address.
+
+/*
+ * Base Addresses for all peripherals used in these drivers.
+ * NOTE: This list of peripherals is incomplete, only necessary
+ * peripherals are included.
+ */
+
+#define SPI1_BASEADDR				(APB2PERIPH_BASEADDR + 0x3000)
+#define SPI2_BASEADDR				(APB1PERIPH_BASEADDR + 0x3800)
+#define SPI3_BASEADDR				(APB1PERIPH_BASEADDR + 0x3C00)
+```
+
+However, in an example like the square root macro, operator precedence is very important.
+
+```c
+#define SQR(x) (x*x) // Poorly defined macro..
+
+int main()
+{
+    int a, b=3;
+    a = SQR(b+5);      // This translates to SQR(3+5*3+5) which gives 23, not the expected 64.
+    printf("%d\n",a);
+    return 0;
+}
+```
