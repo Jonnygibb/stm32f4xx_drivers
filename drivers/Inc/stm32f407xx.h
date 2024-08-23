@@ -8,6 +8,10 @@
 #ifndef INC_STM32F407XX_H_
 #define INC_STM32F407XX_H_
 
+#include <stdint.h>
+
+#define __vo volatile
+
 
 /*
  * Define the base addresses of Flash and SRAM memory.
@@ -47,6 +51,10 @@
 #define GPIOJ_BASEADDR				(AHB1PERIPH_BASEADDR + 0x2400)
 #define GPIOK_BASEADDR				(AHB1PERIPH_BASEADDR + 0x2800)
 
+#define I2C1_BASEADDR				(APB1PERIPH_BASEADDR + 0x5400)
+#define I2C2_BASEADDR				(APB1PERIPH_BASEADDR + 0x5800)
+#define I2C3_BASEADDR				(APB1PERIPH_BASEADDR + 0x5C00)
+
 #define SPI1_BASEADDR				(APB2PERIPH_BASEADDR + 0x3000)
 #define SPI2_BASEADDR				(APB1PERIPH_BASEADDR + 0x3800)
 #define SPI3_BASEADDR				(APB1PERIPH_BASEADDR + 0x3C00)
@@ -59,6 +67,26 @@
 #define USART6_BASEADDR				(APB2PERIPH_BASEADDR + 0x1400)
 
 #define EXTI_BASEADDR				(APB2PERIPH_BASEADDR + 0x3C00)
+
+/********************Peripheral Register Definition Structures********************/
+
+/*
+ * The Registers listed here are specific to stm32f407xx micro-controller.
+ * Registers for peripherals may be more/less for different MCU's.
+ * Check your MCU reference manual before using this header file.
+ */
+
+typedef struct {
+	__vo uint32_t MODER;				// Configures the I/O mode of the GPIO pin. Offset:0x00.
+	__vo uint32_t OTYPER;				// Set the output type - push/pull or open-drain. Offset:0x04.
+	__vo uint32_t OSPEEDR;				// Set the speed of a GPIO pin e.g Low, Med, High. Offset:0x08.
+	__vo uint32_t PUPDR;				// Configures pull-up or pull down registers on pins. Offset:0x0C.
+	__vo uint32_t IDR;					// Read only input data register. Offset:0x10.
+	__vo uint32_t ODR;					// Read/Write output data register. Offset:0x14.
+	__vo uint32_t BSRR;					// Bit set/Reset register. Offset:0x18.
+	__vo uint32_t LCKR;					// Lock the configuration of the GPIO. Offset:0x1C.
+	__vo uint32_t AFR[2];				// Alternate function registers low&high. AFR[0] - low, AFR[1] - High. Offset:0x20-24.
+} GPIO_RegDef_t;
 
 
 
