@@ -2,7 +2,7 @@
  * stm32f407xx.h
  *
  *  Created on: Aug 20, 2024
- *      Author: jonat
+ *      Author: Jonathan Gibbons
  */
 
 #ifndef INC_STM32F407XX_H_
@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define __vo volatile
+#define __vo volatile	// Shorthand volatile macro
 
 
 /*
@@ -68,6 +68,8 @@
 
 #define EXTI_BASEADDR				(APB2PERIPH_BASEADDR + 0x3C00)
 
+#define RCC_BASEADDR				(AHB1PERIPH_BASEADDR + 0x3800)
+
 /********************Peripheral Register Definition Structures********************/
 
 /*
@@ -87,6 +89,59 @@ typedef struct {
 	__vo uint32_t LCKR;					// Lock the configuration of the GPIO. Offset:0x1C.
 	__vo uint32_t AFR[2];				// Alternate function registers low&high. AFR[0] - low, AFR[1] - High. Offset:0x20-24.
 } GPIO_RegDef_t;
+
+
+typedef struct {
+	uint32_t CR;						// RCC clock control register. Offset:0x00
+	uint32_t PLLCFGR;					// RCC PLL configuration register  Offset:0x04
+	uint32_t CFGR;						// RCC clock configuration register. Offset:0x08
+	uint32_t CIR;						// RCC clock interrupt register. Offset:0x0C
+	uint32_t AHB1RSTR;					// RCC AHB1 peripheral reset register. Offset:0x10
+	uint32_t AHB2RSTR;					// RCC AHB2 peripheral reset register. Offset:0x14
+	uint32_t AHB3RSTR;					// RCC AHB3 peripheral reset register. Offset:0x18
+	uint32_t RESERVED_1;				// Reserved/Unused. Offset:0x1C
+	uint32_t APB1RSTR;					// RCC APB1 peripheral reset register. Offset:0x20
+	uint32_t APB2RSTR;					// RCC APB2 peripheral reset register. Offset:0x24
+	uint32_t RESERVED_2[2];				// Reserved/Unused. Offset:0x28-2C
+	uint32_t AHB1ENR;					// RCC AHB1 peripheral clock enable register. Offset:0x30
+	uint32_t AHB2ENR;					// RCC AHB2 peripheral clock enable register. Offset:0x34
+	uint32_t AHB3ENR;					// RCC AHB3 peripheral clock enable register. Offset:0x38
+	uint32_t RESERVED_3;				// Reserved/Unused. Offset:0x3C
+	uint32_t APB1ENR;					// RCC APB1 peripheral clock enable register. Offset:0x40
+	uint32_t APB2ENR;					// RCC APB2 peripheral clock enable register. Offset:0x44
+	uint32_t RESERVED_4[2];				// Reserved/Unused. Offset:0x48-4C
+	uint32_t AHB1LPENR;					// RCC AHB1 peripheral clock enable in low power mode register. Offset:0x50
+	uint32_t AHB2LPENR;					// RCC AHB2 peripheral clock enable in low power mode register. Offset:0x54
+	uint32_t AHB3LPENR;					// RCC AHB3 peripheral clock enable in low power mode register. Offset:0x58
+	uint32_t RESERVED_5;				// Reserved/Unused. Offset:0x5C
+	uint32_t APB1LPENR;					// RCC APB1 peripheral clock enable in low power mode register. Offset:0x60
+	uint32_t APB2LPENR;					// RCC APB2 peripheral clock enable in low power mode register. Offset:0x64
+	uint32_t RESERVED_6[2];				// Reserved/Unused. Offset:0x68-6C
+	uint32_t BDCR;						// RCC Backup domain control register . Offset:0x70
+	uint32_t CSR;						// RCC clock control & status register . Offset:0x74
+	uint32_t RESERVED_7[2];				// Reserved/Unused. Offset:0x78-7C
+	uint32_t SSCGR;						// RCC spread spectrum clock generation register. Offset:0x80
+	uint32_t PLLI2SCFGR;				// RCC PLLI2S configuration register. Offset:0x84
+} RCC_RegDef_t;
+
+/*
+ * Peripheral Definitions (type-casted pointers to address in memory)
+ */
+
+
+#define GPIOA						((GPIO_RegDef_t*)GPIOA_BASEADDR)
+#define GPIOB						((GPIO_RegDef_t*)GPIOB_BASEADDR)
+#define GPIOC						((GPIO_RegDef_t*)GPIOC_BASEADDR)
+#define GPIOD						((GPIO_RegDef_t*)GPIOD_BASEADDR)
+#define GPIOE						((GPIO_RegDef_t*)GPIOE_BASEADDR)
+#define GPIOF						((GPIO_RegDef_t*)GPIOF_BASEADDR)
+#define GPIOG						((GPIO_RegDef_t*)GPIOG_BASEADDR)
+#define GPIOH						((GPIO_RegDef_t*)GPIOH_BASEADDR)
+#define GPIOI						((GPIO_RegDef_t*)GPIOI_BASEADDR)
+#define GPIOJ						((GPIO_RegDef_t*)GPIOJ_BASEADDR)
+#define GPIOK						((GPIO_RegDef_t*)GPIOK_BASEADDR)
+
+#define RCC							((RCC_RegDef_t*)RCC_BASEADDR)
 
 
 
