@@ -110,8 +110,8 @@ void GPIO_PeriClockControl(GPIO_RegDef_t *pGPIOx, uint8_t EnOrDi);
  * Initialisation function that configures a GPIO Pin based on the parameters
  * of the GPIOHandle structure.
  *
- * @param *pGPIOHandle A pointer a GPIO_Handle_t structure that is contains
- * 						the desired configuration for the GPIO Pin.
+ * @param *pGPIOHandle A pointer to a GPIO_Handle_t structure that is contains
+ * 						the desired configuration for the GPIO.
  ******************************************************************************/
 void GPIO_Init(GPIO_Handle_t *pGPIOHandle);
 
@@ -124,13 +124,50 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle);
  ******************************************************************************/
 void GPIO_DeInit(GPIO_RegDef_t *pGPIOx);
 
-/*
- * Data Read and Write
- */
+/******************************************************************************
+ * Read the value (either 1 or 0) from a given GPIO Pin.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ * @param PinNumber The desired pin to read from.
+ ******************************************************************************/
 uint8_t GPIO_ReadFromInputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber);
+
+/******************************************************************************
+ * Read the entire GPIO port Output Data Register.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ ******************************************************************************/
 uint16_t GPIO_ReadFromInputPort(GPIO_RegDef_t *pGPIOx);
+
+/******************************************************************************
+ * Write a value (either 1 or 0) to a specific pin output data register.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ * @param PinNumber The desired pin to write to.
+ *
+ * @param Value The specified data to write to the pin output data register.
+ ******************************************************************************/
 void GPIO_WriteToOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber, uint8_t Value);
+
+/******************************************************************************
+ * Write to the entire output data register of the GPIO port.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ * @param Value The specified data to write to the entire output data register.
+ ******************************************************************************/
 void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t Value);
+
+/******************************************************************************
+ * Flip the pin value of a specified GPIO pin.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ * @param PinNumber The specific pin output data register to toggle.
+ ******************************************************************************/
 void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber);
 
 /*
