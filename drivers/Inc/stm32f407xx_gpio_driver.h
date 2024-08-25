@@ -114,6 +114,14 @@ void GPIO_PeriClockControl(GPIO_RegDef_t *pGPIOx, uint8_t EnOrDi);
  * 						the desired configuration for the GPIO Pin.
  ******************************************************************************/
 void GPIO_Init(GPIO_Handle_t *pGPIOHandle);
+
+/******************************************************************************
+ * De-initialisation function that sets and clears the reset register for the
+ * GPIO port referenced in pGPIOx.
+ *
+ * @param *pGPIOx A pointer to the base address of the GPIO port using the
+ * 					defined register structure.
+ ******************************************************************************/
 void GPIO_DeInit(GPIO_RegDef_t *pGPIOx);
 
 /*

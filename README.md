@@ -1,6 +1,12 @@
 # Microcontroller Learnings
 
-Some things I learnt that are worth writing down
+Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx microcontroller.
+
+- [Volatile Keyword](#volatile-keyword)
+- [Enabling Clocks](#enabling-clocks)
+- [Pre-processor Directives and Operator Precedence](#pre-processor-directives-and-operator-precedence)
+- [Header file documentation](#header-file-documentation)
+- [Do while zero condition macros](#do-while-zero-condition-macros)
 
 ## Volatile Keyword
 
@@ -99,3 +105,28 @@ int main()
     return 0;
 }
 ```
+
+## Header file documentation
+
+Documentation within the function prototype in the header file should tell the function user what the function does and how to use it. In-line code documentation should go in the source file and leave notes to anyone maintaining the codes logic on how it works. Documenting like in the example below from stm32f407xx_gpio_driver also allows for auto generating documentation.
+
+```c
+/******************************************************************************
+ * Initialisation function that configures a GPIO Pin based on the parameters
+ * of the GPIOHandle structure.
+ *
+ * @param *pGPIOHandle A pointer a GPIO_Handle_t structure that is contains
+ * 						the desired configuration for the GPIO Pin.
+ ******************************************************************************/
+void GPIO_Init(GPIO_Handle_t *pGPIOHandle);
+```
+
+## Do while zero condition macros
+
+If theres ever a need to perform two or more actions in a macro, a do while zero condition macro allows for this. See the example below that sets and then clears a register value.
+
+```c
+#define GPIOA_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 0)); (RCC->AHB1RSTR &= ~(1 << 0)); }while(0) // Set then reset.
+```
+
+

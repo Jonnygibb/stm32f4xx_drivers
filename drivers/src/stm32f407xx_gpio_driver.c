@@ -85,7 +85,8 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG) {
 		// Generate the mask for the Pin Mode register. Multiply by 2 since the pin register is 2 bits wide.
 		temp = (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber));
-		pGPIOHandle->pGPIOx->MODER = temp; // Save the value in the GPIO Mode register.
+		pGPIOHandle->pGPIOx->MODER &= ~(0x3 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); // Clear bit positions.
+		pGPIOHandle->pGPIOx->MODER |= temp; // Save the value in the GPIO Mode register.
 	} else {
 		//TODO - Configure settings for interrupt modes
 	}
@@ -96,31 +97,68 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 	// Create another bit shift to place the desired speed in the correct pins register position.
 	// Multiply by 2 again since bit field is 2 bits wide.
 	temp = pGPIOHandle->GPIO_PinConfig.GPIO_PinSpeed << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
-	pGPIOHandle->pGPIOx->OSPEEDR = temp;
+	pGPIOHandle->pGPIOx->OSPEEDR &= ~(0x3 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); // Clear bit positions.
+	pGPIOHandle->pGPIOx->OSPEEDR |= temp;
 
 	temp = 0;
 
 	// Configure the pull-up/pull-down state of the GPIO pin.
 	temp = pGPIOHandle->GPIO_PinConfig.GPIO_PinPuPdControl << (2 * pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
-	pGPIOHandle->pGPIOx->PUPDR = temp;
+	pGPIOHandle->pGPIOx->PUPDR &= ~(0x3 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); // Clear bit positions.
+	pGPIOHandle->pGPIOx->PUPDR |= temp;
 
 	temp = 0;
 
 	// Configure the output type of the GPIO pin. No need to multiply by 2 since only 1 bit wide register.
 	temp = pGPIOHandle->GPIO_PinConfig.GPIO_PinOPType << (pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
-	pGPIOHandle->pGPIOx->OTYPER = temp;
+	pGPIOHandle->pGPIOx->OTYPER &= ~(0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber); // Clear bit position.
+	pGPIOHandle->pGPIOx->OTYPER |= temp;
 
 	temp = 0;
 
 	// Configure the alternate functionality registers (if necessary).
 	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_ALTFN) {
-		// TODO - Configure Alt function registers.
+
+		uint8_t temp1, temp2;
+
+		temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 8;		// Used to determine high or low AFR.
+		temp2 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 8;		// Determines mask for register.
+
+		pGPIOHandle->pGPIOx->AFR[temp1] &= ~(0xf << (4 * temp2));
+		// Multiply by 4 here since alternate function register is 4 bits wide.
+		pGPIOHandle->pGPIOx->AFR[temp1] |= (pGPIOHandle->GPIO_PinConfig.GPIO_PinAltFunMode << (4 * temp2));
 	}
-
-
 }
-void GPIO_DeInit(GPIO_RegDef_t *pGPIOx) {
 
+void GPIO_DeInit(GPIO_RegDef_t *pGPIOx) {
+	if (pGPIOx == GPIOA)
+		{
+			GPIOA_REG_RESET();
+		} else if (pGPIOx == GPIOB)
+		{
+			GPIOB_REG_RESET();
+		} else if (pGPIOx == GPIOC)
+		{
+			GPIOC_REG_RESET();
+		} else if (pGPIOx == GPIOD)
+		{
+			GPIOD_REG_RESET();
+		} else if (pGPIOx == GPIOE)
+		{
+			GPIOE_REG_RESET();
+		} else if (pGPIOx == GPIOF)
+		{
+			GPIOF_REG_RESET();
+		} else if (pGPIOx == GPIOG)
+		{
+			GPIOG_REG_RESET();
+		} else if (pGPIOx == GPIOH)
+		{
+			GPIOH_REG_RESET();
+		} else if (pGPIOx == GPIOI)
+		{
+			GPIOI_REG_RESET();
+		}
 }
 
 /*
