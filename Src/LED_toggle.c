@@ -9,11 +9,35 @@
 
 void delay() {
 	// Basic delay
-	for(uint32_t i = 0; i < 500000; i++);
+	for(uint32_t i = 0; i < 250000; i++);
 }
 
-int main(void) {
+void led_toggle() {
 	GPIO_Handle_t GpioLed;
+
+		// Configure the GPIO port and pin for LED PD12
+		GpioLed.pGPIOx = GPIOD;
+		GpioLed.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_12;
+		GpioLed.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+		GpioLed.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_VERY_HIGH;
+		GpioLed.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
+		GpioLed.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+
+		// Enable the peripheral clock for GPIOD.
+		GPIO_PeriClockControl(GPIOD, ENABLE);
+		// Use the configuration to initialise the GPIO port and pin.
+		GPIO_Init(&GpioLed);
+
+		// Continue to toggle the LED on port D Pin 12.
+		while(1) {
+			GPIO_ToggleOutputPin(GPIOD, GPIO_PIN_NO_12);
+			delay();
+		}
+}
+
+
+void led_button_toggle() {
+	GPIO_Handle_t GpioLed, GpioBtn;
 
 	// Configure the GPIO port and pin for LED PD12
 	GpioLed.pGPIOx = GPIOD;
@@ -23,15 +47,33 @@ int main(void) {
 	GpioLed.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
 	GpioLed.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
 
-	// Enable the peripheral clock for GPIOD.
-	GPIO_PeriClockControl(GPIOD, ENABLE);
-	// Use the configuration to initialise the GPIO port and pin.
-	GPIO_Init(&GpioLed);
+	// Configure input pin for on-board user button
+	GpioBtn.pGPIOx = GPIOA;
+	GpioBtn.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_0;
+	GpioBtn.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	GpioBtn.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_VERY_HIGH;
+	GpioBtn.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
 
-	// Continue to toggle the LED on port D Pin 12.
+
+	// Enable the peripheral clock for GPIOD and GPIOA.
+	GPIO_PeriClockControl(GPIOD, ENABLE);
+	GPIO_PeriClockControl(GPIOA, ENABLE);
+
+	// Use the configuration to initialise the GPIO port and pin.
+	// Initialise both the LED and the user button.
+	GPIO_Init(&GpioLed);
+	GPIO_Init(&GpioBtn);
+
 	while(1) {
-		GPIO_ToggleOutputPin(GPIOD, GPIO_PIN_NO_12);
-		delay();
+		if (GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0) == HIGH) {
+			delay();	// Add delay to deal with button de-bouncing.
+			GPIO_ToggleOutputPin(GPIOD, GPIO_PIN_NO_12);
+		}
 	}
+}
+
+
+int main(void) {
+	led_button_toggle();
 	return 0;
 }
