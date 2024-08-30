@@ -66,9 +66,10 @@
 #define USART5_BASEADDR				(APB1PERIPH_BASEADDR + 0x5000)
 #define USART6_BASEADDR				(APB2PERIPH_BASEADDR + 0x1400)
 
-#define EXTI_BASEADDR				(APB2PERIPH_BASEADDR + 0x3C00)
-
 #define RCC_BASEADDR				(AHB1PERIPH_BASEADDR + 0x3800)
+#define EXTI_BASEADDR				(APB2PERIPH_BASEADDR + 0x3C00)
+#define SYSCFG_BASEADDR				(APB2PERIPH_BASEADDR + 0x3800)
+
 
 /********************Peripheral Register Definition Structures********************/
 
@@ -92,37 +93,56 @@ typedef struct {
 
 
 typedef struct {
-	__vo uint32_t CR;						// RCC clock control register. Offset:0x00
-	__vo uint32_t PLLCFGR;					// RCC PLL configuration register  Offset:0x04
-	__vo uint32_t CFGR;						// RCC clock configuration register. Offset:0x08
-	__vo uint32_t CIR;						// RCC clock interrupt register. Offset:0x0C
-	__vo uint32_t AHB1RSTR;					// RCC AHB1 peripheral reset register. Offset:0x10
-	__vo uint32_t AHB2RSTR;					// RCC AHB2 peripheral reset register. Offset:0x14
-	__vo uint32_t AHB3RSTR;					// RCC AHB3 peripheral reset register. Offset:0x18
+	__vo uint32_t CR;					// RCC clock control register. Offset:0x00
+	__vo uint32_t PLLCFGR;				// RCC PLL configuration register  Offset:0x04
+	__vo uint32_t CFGR;					// RCC clock configuration register. Offset:0x08
+	__vo uint32_t CIR;					// RCC clock interrupt register. Offset:0x0C
+	__vo uint32_t AHB1RSTR;				// RCC AHB1 peripheral reset register. Offset:0x10
+	__vo uint32_t AHB2RSTR;				// RCC AHB2 peripheral reset register. Offset:0x14
+	__vo uint32_t AHB3RSTR;				// RCC AHB3 peripheral reset register. Offset:0x18
 	uint32_t RESERVED_1;				// Reserved/Unused. Offset:0x1C
-	__vo uint32_t APB1RSTR;					// RCC APB1 peripheral reset register. Offset:0x20
-	__vo uint32_t APB2RSTR;					// RCC APB2 peripheral reset register. Offset:0x24
+	__vo uint32_t APB1RSTR;				// RCC APB1 peripheral reset register. Offset:0x20
+	__vo uint32_t APB2RSTR;				// RCC APB2 peripheral reset register. Offset:0x24
 	uint32_t RESERVED_2[2];				// Reserved/Unused. Offset:0x28-2C
-	__vo uint32_t AHB1ENR;					// RCC AHB1 peripheral clock enable register. Offset:0x30
-	__vo uint32_t AHB2ENR;					// RCC AHB2 peripheral clock enable register. Offset:0x34
-	__vo uint32_t AHB3ENR;					// RCC AHB3 peripheral clock enable register. Offset:0x38
+	__vo uint32_t AHB1ENR;				// RCC AHB1 peripheral clock enable register. Offset:0x30
+	__vo uint32_t AHB2ENR;				// RCC AHB2 peripheral clock enable register. Offset:0x34
+	__vo uint32_t AHB3ENR;				// RCC AHB3 peripheral clock enable register. Offset:0x38
 	uint32_t RESERVED_3;				// Reserved/Unused. Offset:0x3C
-	__vo uint32_t APB1ENR;					// RCC APB1 peripheral clock enable register. Offset:0x40
-	__vo uint32_t APB2ENR;					// RCC APB2 peripheral clock enable register. Offset:0x44
+	__vo uint32_t APB1ENR;				// RCC APB1 peripheral clock enable register. Offset:0x40
+	__vo uint32_t APB2ENR;				// RCC APB2 peripheral clock enable register. Offset:0x44
 	uint32_t RESERVED_4[2];				// Reserved/Unused. Offset:0x48-4C
-	__vo uint32_t AHB1LPENR;					// RCC AHB1 peripheral clock enable in low power mode register. Offset:0x50
-	__vo uint32_t AHB2LPENR;					// RCC AHB2 peripheral clock enable in low power mode register. Offset:0x54
-	__vo uint32_t AHB3LPENR;					// RCC AHB3 peripheral clock enable in low power mode register. Offset:0x58
+	__vo uint32_t AHB1LPENR;			// RCC AHB1 peripheral clock enable in low power mode register. Offset:0x50
+	__vo uint32_t AHB2LPENR;			// RCC AHB2 peripheral clock enable in low power mode register. Offset:0x54
+	__vo uint32_t AHB3LPENR;			// RCC AHB3 peripheral clock enable in low power mode register. Offset:0x58
 	uint32_t RESERVED_5;				// Reserved/Unused. Offset:0x5C
-	__vo uint32_t APB1LPENR;					// RCC APB1 peripheral clock enable in low power mode register. Offset:0x60
-	__vo uint32_t APB2LPENR;					// RCC APB2 peripheral clock enable in low power mode register. Offset:0x64
+	__vo uint32_t APB1LPENR;			// RCC APB1 peripheral clock enable in low power mode register. Offset:0x60
+	__vo uint32_t APB2LPENR;			// RCC APB2 peripheral clock enable in low power mode register. Offset:0x64
 	uint32_t RESERVED_6[2];				// Reserved/Unused. Offset:0x68-6C
-	__vo uint32_t BDCR;						// RCC Backup domain control register . Offset:0x70
-	__vo uint32_t CSR;						// RCC clock control & status register . Offset:0x74
+	__vo uint32_t BDCR;					// RCC Backup domain control register . Offset:0x70
+	__vo uint32_t CSR;					// RCC clock control & status register . Offset:0x74
 	uint32_t RESERVED_7[2];				// Reserved/Unused. Offset:0x78-7C
-	__vo uint32_t SSCGR;						// RCC spread spectrum clock generation register. Offset:0x80
-	__vo uint32_t PLLI2SCFGR;				// RCC PLLI2S configuration register. Offset:0x84
+	__vo uint32_t SSCGR;				// RCC spread spectrum clock generation register. Offset:0x80
+	__vo uint32_t PLLI2SCFGR;			// RCC PLLI2S configuration register. Offset:0x84
 } RCC_RegDef_t;
+
+
+typedef struct {
+	__vo uint32_t IMR;					// Interrupt mask register. Offset: 0x00
+	__vo uint32_t EMR;					// Event mask register. Offset 0x04
+	__vo uint32_t RTSR;					// Rising trigger selection register. Offset 0x08
+	__vo uint32_t FTSR;					// Falling trigger selection register. Offset 0x0C
+	__vo uint32_t SWIER;				// Software interrupt event register. Offset 0x10
+	__vo uint32_t PR;					// Pending Register. Offset 0x14
+} EXTI_RegDef_t;
+
+
+typedef struct {
+	__vo uint32_t MEMRMP;				// Memory remap register. Offset: 0x00
+	__vo uint32_t PMC;					// Peripheral mode configuration register. Offset: 0x04
+	__vo uint32_t EXTICR[4];			// External interrupt configuration registers. Offset: 0x08-0x14
+	uint32_t RESERVED[2];				// Reserved/Unused. Offset: 0x18-0x1C
+	__vo uint32_t CMPCR;				// Compensation cell control register. Offset: 0x20
+} SYSCFG_RegDef_t;
 
 /*
  * Peripheral Definitions (type-casted pointers to address in memory)
@@ -142,6 +162,8 @@ typedef struct {
 #define GPIOK						((GPIO_RegDef_t*)GPIOK_BASEADDR)
 
 #define RCC							((RCC_RegDef_t*)RCC_BASEADDR)
+#define EXTI						((EXTI_RegDef_t*)EXTI_BASEADDR)
+#define SYSCFG						((SYSCFG_RegDef_t*)SYSCFG_BASEADDR)
 
 /*
  * Clock Enable Macros for GPIOx Peripherals
@@ -188,6 +210,8 @@ typedef struct {
  * Clock Enable Macros for SYSCFG Peripherals
  */
 
+#define SYSCFG_PCLK_EN()			(RCC->APB2ENR |= (1<<14))
+
 /*
  * Clock Disable Macros for GPIOx Peripherals
  */
@@ -232,6 +256,8 @@ typedef struct {
 /*
  * Clock Disable Macros for SYSCFG Peripherals
  */
+
+#define SYSCFG_PCLK_DI()			(RCC->APB2ENR &= ~(1<<14))
 
 /*
  * GPIO Register Reset Macros
