@@ -12,6 +12,31 @@
 
 #define __vo volatile	// Shorthand volatile macro
 
+/****************************** Processor Specific Details ******************************
+ *
+ */
+
+/*
+ * ARM Cortex Mx Processor NVIC ISERx register address
+ */
+#define NVIC_ISER0					((__vo uint32_t*)0xE000E100)
+#define NVIC_ISER1					((__vo uint32_t*)0xE000E104)
+#define NVIC_ISER2					((__vo uint32_t*)0xE000E108)
+#define NVIC_ISER3					((__vo uint32_t*)0xE000E10C)
+
+/*
+ * ARM Cortex Mx Processor NVIC ICERx register address
+ */
+#define NVIC_ICER0					((__vo uint32_t*)0xE000E180)
+#define NVIC_ICER1					((__vo uint32_t*)0xE000E184)
+#define NVIC_ICER2					((__vo uint32_t*)0xE000E188)
+#define NVIC_ICER3					((__vo uint32_t*)0xE000E18C)
+
+/*
+ *  ARM Cortex Mx Porcessor Priority register address
+ */
+#define NVIC_PR_BASE_ADDR			((__vo uint32_t*)0xE000E400)
+#define NO_PR_BITS_IMPLEMENTED		4
 
 /*
  * Define the base addresses of Flash and SRAM memory.
@@ -262,6 +287,7 @@ typedef struct {
 /*
  * GPIO Register Reset Macros
  */
+
 #define GPIOA_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 0)); (RCC->AHB1RSTR &= ~(1 << 0)); }while(0) // Set then reset.
 #define GPIOB_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 1)); (RCC->AHB1RSTR &= ~(1 << 1)); }while(0) // Set then reset.
 #define GPIOC_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 2)); (RCC->AHB1RSTR &= ~(1 << 2)); }while(0) // Set then reset.
@@ -271,6 +297,34 @@ typedef struct {
 #define GPIOG_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 6)); (RCC->AHB1RSTR &= ~(1 << 6)); }while(0) // Set then reset.
 #define GPIOH_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7)); }while(0) // Set then reset.
 #define GPIOI_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8)); }while(0) // Set then reset.
+
+/*
+ * Calculate port-code from GPIO_BASEADDR.
+ */
+
+#define GPIO_BASEADDR_TO_PORTCODE(x)		 ((x == GPIOA)?0:\
+											  (x == GPIOB)?1:\
+											  (x == GPIOC)?2:\
+											  (x == GPIOD)?3:\
+											  (x == GPIOE)?4:\
+										      (x == GPIOF)?5:\
+											  (x == GPIOG)?6:\
+											  (x == GPIOH)?7:\
+											  (x == GPIOI)?8:0)
+
+
+/*
+ * IRQ (Interrupt Requests) numbers for stm32407xx.
+ * THIS IS NOT A COMPLETE LIST
+ * TODO - Complete this list for other peripherals.
+ */
+#define IRQ_NO_EXTI0		6
+#define IRQ_NO_EXTI1		7
+#define IRQ_NO_EXTI2		8
+#define IRQ_NO_EXTI3		9
+#define IRQ_NO_EXTI4		10
+#define IRQ_NO_EXTI9_5		23
+#define IRQ_NO_EXTI15_10	40
 
 /*
  * Generic Macros

@@ -7,6 +7,7 @@ Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx 
 - [Pre-processor Directives and Operator Precedence](#pre-processor-directives-and-operator-precedence)
 - [Header file documentation](#header-file-documentation)
 - [Do while zero condition macros](#do-while-zero-condition-macros)
+- [IRQ Implementation and Startup Files](#irq-implementation-and-startup-files)
 
 ## Volatile Keyword
 
@@ -129,4 +130,54 @@ If theres ever a need to perform two or more actions in a macro, a do while zero
 #define GPIOA_REG_RESET()			do{ (RCC->AHB1RSTR |= (1 << 0)); (RCC->AHB1RSTR &= ~(1 << 0)); }while(0) // Set then reset.
 ```
 
+## IRQ Implementation and Startup Files
+
+The startup file for the microcontroller has weak defintions of functions that are overwritten by any other function with the same name. It is up to the developer to write a function specific to their application to handle this interrupt should it occur.
+
+```c
+	//startup_stm32f407vgtx.s
+	.weak	EXTI0_IRQHandler
+	.thumb_set EXTI0_IRQHandler,Default_Handler
+
+	.weak	EXTI1_IRQHandler
+	.thumb_set EXTI1_IRQHandler,Default_Handler
+
+	.weak	EXTI2_IRQHandler
+	.thumb_set EXTI2_IRQHandler,Default_Handler
+
+	.weak	EXTI3_IRQHandler
+	.thumb_set EXTI3_IRQHandler,Default_Handler
+```
+
+Also included in the startup file is a section that copies the memory address of the handler function and put it in the correct location in the interrupt and event vector table!
+
+```c
+g_pfnVectors:
+  .word _estack
+  .word Reset_Handler
+  .word NMI_Handler
+  .word HardFault_Handler
+  .word	MemManage_Handler
+  .word	BusFault_Handler
+  .word	UsageFault_Handler
+  .word	0
+  .word	0
+  .word	0
+  .word	0
+  .word	SVC_Handler
+  .word	DebugMon_Handler
+  .word	0
+  .word	PendSV_Handler
+  .word	SysTick_Handler
+  .word	WWDG_IRQHandler              			/* Window Watchdog interrupt                                          */
+  .word	PVD_IRQHandler               			/* PVD through EXTI line detection interrupt                          */
+  .word	TAMP_STAMP_IRQHandler        			/* Tamper and TimeStamp interrupts through the EXTI line              */
+  .word	RTC_WKUP_IRQHandler          			/* RTC Wakeup interrupt through the EXTI line                         */
+  .word	0                            			/* Reserved                                                           */
+  .word	RCC_IRQHandler               			/* RCC global interrupt                                               */
+  .word	EXTI0_IRQHandler             			/* EXTI Line0 interrupt                                               */
+  .word	EXTI1_IRQHandler             			/* EXTI Line1 interrupt                                               */
+  .word	EXTI2_IRQHandler             			/* EXTI Line2 interrupt                                               */
+  .word	EXTI3_IRQHandler             			/* EXTI Line3 interrupt                                               */
+```
 

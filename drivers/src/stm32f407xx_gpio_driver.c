@@ -105,7 +105,15 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 			EXTI->FTSR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 		}
 
+		// Calculate which register and which register position is required.
+		uint8_t temp1 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 4;
+		uint8_t temp2 = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 4;
 
+		// The the macro to calculate the portcode from the GPIO port pointer.
+		uint8_t portcode = GPIO_BASEADDR_TO_PORTCODE(pGPIOHandle->pGPIOx);
+
+		SYSCFG_PCLK_EN(); // Enable the peripheral clock for the SYSCFG peripheral
+		SYSCFG->EXTICR[temp1] = portcode << (temp2 * 4);	// Enable the corresponding EXTI line.
 
 		// Enable the EXTI interrupt delivery using IMR.
 		EXTI->IMR |= (1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
@@ -224,8 +232,48 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber) {
  * IRQ Configuration and ISR Handling
  */
 void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnOrDi){
-
+	if (EnOrDi == ENABLE) {
+		// NVIC Interrupt Set-enable registers (ISER) are 32bit wide.
+		// Set corresponding number depending on the IRQNumber.
+		if(IRQNumber <= 31) {
+			*NVIC_ISER0 |= (1 << IRQNumber);
+		} else if(IRQNumber > 31 && IRQNumber < 64) {
+			*NVIC_ISER1 |= (1 << (IRQNumber % 32));
+		} else if(IRQNumber >= 64 && IRQNumber < 96) {
+			*NVIC_ISER3 |= (1 << (IRQNumber % 64));
+		}
+	} else {
+		// NVIC Interrupt Clear-enable registers (ICER) are 32 bit wide.
+		// Again, set the corresponding bit to the correct IRQNumber
+		if(IRQNumber <= 31) {
+			*NVIC_ICER0 |= (1 << IRQNumber);
+		} else if(IRQNumber > 31 && IRQNumber < 64) {
+			*NVIC_ICER1 |= (1 << (IRQNumber % 32));
+		} else if(IRQNumber >= 64 && IRQNumber < 96) {
+			*NVIC_ICER3 |= (1 << (IRQNumber % 64));
+		}
+	}
 }
-void GPIO_IRQHandling(uint8_t PinNumber){
 
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority) {
+	// Calculate which of the 60 priority registers is requested.
+	uint8_t iprx = IRQNumber / 4;
+	// Calculate the requested position within that register.
+	uint8_t iprx_pos = IRQNumber % 4;
+	// 8x since the priority registers are split into 8bit sections.
+	// Some of the bits in the priority register are not used. Only 4 bits
+	// in cortex M4 micro-controller so need to shift again by 4.
+	uint8_t shift_amount = (8 * iprx_pos) + (8 - NO_PR_BITS_IMPLEMENTED);
+
+	// 4x since iprx is of type uint8_t and we need to increment a uint32_t.
+	// Deference the corresponding priority register and set the correct bits
+	*(NVIC_PR_BASE_ADDR + (iprx * 4)) |= (IRQPriority << shift_amount);
+}
+
+void GPIO_IRQHandling(uint8_t PinNumber){
+	// Clear the EXTI Pending Register (PR) for the correct pin number.
+	if(EXTI->PR & (1 << PinNumber)) {
+		// As per the reference manual, bit is cleared by programming it to 1.
+		EXTI->PR |= (1 << PinNumber);
+	}
 }

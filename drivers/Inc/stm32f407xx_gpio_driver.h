@@ -170,10 +170,32 @@ void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t Value);
  ******************************************************************************/
 void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber);
 
-/*
- * IRQ Configuration and ISR Handling
- */
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnOrDi);
+/******************************************************************************
+ * Enables or disables the desired interrupt in the micro-controllers nested
+ * vectored interrupt controller (NVIC).
+ *
+ * @param IRQNumber The desired interrupt request number to be enabled or
+ * 					disabled.
+ * @param EnOrDI	Integer value to enable or disable the peripheral clock. Can
+ * 					be 1 or 0. Alternatively use macro ENABLE or DISABLE.
+ ******************************************************************************/
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
+
+/******************************************************************************
+ * Sets the interrupt priority in the NVIC priority register.
+ *
+ * @param IRQNumber The desired interrupt request number for which the priority
+ * 						should be changed.
+ * @param IRQPriority The priority of the specified IRQNumber.
+ ******************************************************************************/
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority);
+
+/******************************************************************************
+ * Clears the interrupt from the NVIC interrupt pending register.
+ *
+ * @param IRQNumber The desired interrupt request number for which the interrupt
+ * 						should be handled.
+ ******************************************************************************/
 void GPIO_IRQHandling(uint8_t PinNumber);
 
 
