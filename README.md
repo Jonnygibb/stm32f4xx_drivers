@@ -8,6 +8,7 @@ Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx 
 - [Header file documentation](#header-file-documentation)
 - [Do while zero condition macros](#do-while-zero-condition-macros)
 - [IRQ Implementation and Startup Files](#irq-implementation-and-startup-files)
+- [Setting the memory of structs](#setting-the-memory-of-structs)
 
 ## Volatile Keyword
 
@@ -181,3 +182,18 @@ g_pfnVectors:
   .word	EXTI3_IRQHandler             			/* EXTI Line3 interrupt                                               */
 ```
 
+## Setting the memory of structs
+
+When initialising structs in the method used in the snippet below, the values of the struct can be set to random values.
+
+```c
+GPIO_Handle_t GpioLed, GpioBtn;
+```
+
+One mechanism of countering the random allocation is to purposely set the memory to 0 using the memset function.
+
+```c
+GPIO_Handle_t GpioLed, GpioBtn;
+memset(&GpioLed, 0, sizeof(GpioLed));
+memset(&GpioBtn, 0, sizeof(GpioBtn));
+```
