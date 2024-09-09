@@ -9,6 +9,7 @@ Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx 
 - [Do while zero condition macros](#do-while-zero-condition-macros)
 - [IRQ Implementation and Startup Files](#irq-implementation-and-startup-files)
 - [Setting the memory of structs](#setting-the-memory-of-structs)
+- [Taking care when incrementing pointers](#taking-care-when-incrementing-pointers)
 
 ## Volatile Keyword
 
@@ -196,4 +197,21 @@ One mechanism of countering the random allocation is to purposely set the memory
 GPIO_Handle_t GpioLed, GpioBtn;
 memset(&GpioLed, 0, sizeof(GpioLed));
 memset(&GpioBtn, 0, sizeof(GpioBtn));
+```
+
+## Taking care when incrementing pointers
+
+Initially, I had incremented a uint32_t pointer by a uint8_t valued multiplied by 4 since I had assumed that the types should be the same to increment correctly.
+
+```c
+// 4x since iprx is of type uint8_t and we need to increment a uint32_t.
+// Deference the corresponding priority register and set the correct bits
+*(NVIC_PR_BASE_ADDR + (4 * iprx)) |= (IRQPriority << shift_amount);
+```
+
+This was incorrect since a uint32_t pointer when incremented by 1 is actually a jump to the next uint32_t memory address i.e 0x50002000 pointer + 1 becomes 0x50002004. Therefore I had to remove the *4 to remove the bug from my code.
+
+```c
+// Deference the corresponding priority register and set the correct bits
+*(NVIC_PR_BASE_ADDR + (iprx)) |= (IRQPriority << shift_amount);
 ```

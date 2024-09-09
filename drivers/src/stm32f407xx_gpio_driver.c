@@ -231,7 +231,7 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber) {
 /*
  * IRQ Configuration and ISR Handling
  */
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnOrDi){
+void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t EnOrDi){
 	if (EnOrDi == ENABLE) {
 		// NVIC Interrupt Set-enable registers (ISER) are 32bit wide.
 		// Set corresponding number depending on the IRQNumber.
@@ -255,7 +255,7 @@ void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnOrDi){
 	}
 }
 
-void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority) {
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {
 	// Calculate which of the 60 priority registers is requested.
 	uint8_t iprx = IRQNumber / 4;
 	// Calculate the requested position within that register.
@@ -265,9 +265,8 @@ void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority) {
 	// in cortex M4 micro-controller so need to shift again by 4.
 	uint8_t shift_amount = (8 * iprx_pos) + (8 - NO_PR_BITS_IMPLEMENTED);
 
-	// 4x since iprx is of type uint8_t and we need to increment a uint32_t.
 	// Deference the corresponding priority register and set the correct bits
-	*(NVIC_PR_BASE_ADDR + (iprx * 4)) |= (IRQPriority << shift_amount);
+	*(NVIC_PR_BASE_ADDR + (iprx)) |= (IRQPriority << shift_amount);
 }
 
 void GPIO_IRQHandling(uint8_t PinNumber){

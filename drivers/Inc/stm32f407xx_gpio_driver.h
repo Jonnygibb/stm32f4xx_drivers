@@ -179,7 +179,7 @@ void GPIO_ToggleOutputPin(GPIO_RegDef_t *pGPIOx, uint8_t PinNumber);
  * @param EnOrDI	Integer value to enable or disable the peripheral clock. Can
  * 					be 1 or 0. Alternatively use macro ENABLE or DISABLE.
  ******************************************************************************/
-void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
+void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t EnOrDi);
 
 /******************************************************************************
  * Sets the interrupt priority in the NVIC priority register.
@@ -188,7 +188,7 @@ void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
  * 						should be changed.
  * @param IRQPriority The priority of the specified IRQNumber.
  ******************************************************************************/
-void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint8_t IRQPriority);
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 
 /******************************************************************************
  * Clears the interrupt from the NVIC interrupt pending register.

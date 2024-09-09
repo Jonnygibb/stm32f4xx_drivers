@@ -75,7 +75,7 @@ void led_button_toggle() {
 	}
 }
 
-void leg_interrupt() {
+void led_interrupt() {
 	GPIO_Handle_t GpioLed, GpioBtn;
 	memset(&GpioLed, 0, sizeof(GpioLed));
 	memset(&GpioBtn, 0, sizeof(GpioBtn));
@@ -109,7 +109,7 @@ void leg_interrupt() {
 	GPIO_IRQPriorityConfig(IRQ_NO_EXTI0, 15);
 
 	// Enabled the IRQ EXTI0 line since the user button is portA, pin0.
-	GPIO_IRQInterruptConfig(IRQ_NO_EXTI0, ENABLE);
+	GPIO_IRQConfig(IRQ_NO_EXTI0, ENABLE);
 }
 
 void EXTI0_IRQHandler() {
@@ -120,6 +120,6 @@ void EXTI0_IRQHandler() {
 
 
 int main(void) {
-	led_button_toggle();
+	led_interrupt();
 	return 0;
 }
