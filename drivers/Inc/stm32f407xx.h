@@ -33,7 +33,7 @@
 #define NVIC_ICER3					((__vo uint32_t*)0xE000E18C)
 
 /*
- *  ARM Cortex Mx Porcessor Priority register address
+ *  ARM Cortex Mx Processor Priority register address
  */
 #define NVIC_PR_BASE_ADDR			((__vo uint32_t*)0xE000E400)
 #define NO_PR_BITS_IMPLEMENTED		4
@@ -115,6 +115,19 @@ typedef struct {
 	__vo uint32_t LCKR;					// Lock the configuration of the GPIO. Offset:0x1C.
 	__vo uint32_t AFR[2];				// Alternate function registers low&high. AFR[0] - low, AFR[1] - High. Offset:0x20-24.
 } GPIO_RegDef_t;
+
+
+typedef struct {
+	__vo uint32_t CR1;					// SPI control register 1. Offset:0x00.
+	__vo uint32_t CR2;					// SPI control register 2. Offset:0x04.
+	__vo uint32_t SR;					// SPI status register. Offset:0x08.
+	__vo uint32_t DR;					// SPI data register. Offset:0x0C.
+	__vo uint32_t CRCPR;				// SPI CRC polynomial register. Offset:0x10.
+	__vo uint32_t RXCRCR;				// SPI RX CRC register. Offset:0x14.
+	__vo uint32_t TXCRCR;				// SPI TX CRC register. Offset:0x18.
+	__vo uint32_t I2SCFGR;				// SPI_I2S configuration register. Offset:0x1C.
+	__vo uint32_t I2SPR;				// SPI_I2S pre-scaler register. Offset:0x20.
+} SPI_RegDef_t;
 
 
 typedef struct {
