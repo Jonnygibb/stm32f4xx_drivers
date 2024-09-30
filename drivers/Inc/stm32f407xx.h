@@ -199,6 +199,10 @@ typedef struct {
 #define GPIOJ						((GPIO_RegDef_t*)GPIOJ_BASEADDR)
 #define GPIOK						((GPIO_RegDef_t*)GPIOK_BASEADDR)
 
+#define SPI1						((SPI_RegDef_t*)SPI1_BASEADDR)
+#define SPI2						((SPI_RegDef_t*)SPI2_BASEADDR)
+#define SPI3						((SPI_RegDef_t*)SPI3_BASEADDR)
+
 #define RCC							((RCC_RegDef_t*)RCC_BASEADDR)
 #define EXTI						((EXTI_RegDef_t*)EXTI_BASEADDR)
 #define SYSCFG						((SYSCFG_RegDef_t*)SYSCFG_BASEADDR)
@@ -372,5 +376,6 @@ typedef struct {
 #define LOW					0
 
 #include "stm32f407xx_gpio_driver.h"
+#include "stm32f407xx_spi_driver.h"
 
 #endif /* INC_STM32F407XX_H_ */
