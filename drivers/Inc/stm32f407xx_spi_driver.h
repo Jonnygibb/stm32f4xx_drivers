@@ -61,8 +61,8 @@ typedef struct {
 /*
  * @SPI_DFF
  */
-#define SPI_DFF_8bits				0
-#define SPI_DFF_16bits				1
+#define SPI_DFF_8BITS				0
+#define SPI_DFF_16BITS				1
 
 /*
  * @SPI_CPOL
