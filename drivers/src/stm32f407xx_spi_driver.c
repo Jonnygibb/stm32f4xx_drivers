@@ -77,3 +77,52 @@ void SPI_Init(SPI_Handle_t *pSPIHandle) {
 	pSPIHandle->pSPIx->CR1 = tempreg;
 
 }
+/*
+ * SPI De-initialisation function.
+ */
+void SPI_DeInit(SPI_RegDef_t *pSPIx) {
+	// TODO
+}
+
+/*
+ * SPI get flag status function.
+ */
+uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint32_t FlagName) {
+	if (pSPIx->SR & FlagName) {
+		return FLAG_SET;
+	}
+	return FLAG_RESET;
+}
+
+/*
+ * SPI Send data function.
+ * This API can be considered a blocking or polling setting since
+ * it uses while loops and continuous polling of the status register.
+ *
+ * An interrupt based approach is better and will be implemented later.
+ */
+void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len) {
+	while(len > 0){
+
+		// Wait until the TX buffer is empty.
+		while(SPI_GetFlagStatus(pSPIx, SPI_TXE_FLAG)  == FLAG_RESET);
+
+		// Check the data frame format, 16bit or 8bit.
+		if((pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
+			// 16bit DFF
+			// Typecast here since the pointer is of uint8_t but
+			// two bytes of data are being sent in 16bit DFF.
+			pSPIx->DR = *((uint16_t*)pTxBuffer);
+			len--;
+			len--;
+			// Increment the pointer to the next buffer item.
+			(uint16_t*)pTxBuffer++;
+		} else {
+			// 8bit DFF
+			pSPIx->DR = *pTxBuffer;
+			len--;
+			// Increment the pointer to the next buffer item.
+			pTxBuffer++;
+		}
+	}
+}

@@ -84,6 +84,18 @@ typedef struct {
 #define SPI_SSM_DI					0
 #define SPI_SSM_EN					1
 
+/*
+ * SPI related status flag definitions.
+ */
+#define SPI_RXNE_FLAG				(1 << SPI_SR_RXNE)
+#define SPI_TXE_FLAG				(1 << SPI_SR_TXE)
+#define SPI_CHSIDE_FLAG				(1 << SPI_SR_CHSIDE)
+#define SPI_UDS_FLAG				(1 << SPI_SR_UDR)
+#define SPI_CRCERR_FLAG				(1 << SPI_SR_CRCERR)
+#define SPI_MODF_FLAG				(1 << SPI_SR_MODF)
+#define SPI_OCR_FLAG				(1 << SPI_SR_OVR)
+#define SPI_BSY_FLAG				(1 << SPI_SR_BSY)
+#define SPI_FRE_FLAG				(1 << SPI_SR_FRE)
 
 /********************************************************************************************
  * 								APIs supported by this driver
@@ -117,6 +129,8 @@ void SPI_Init(SPI_Handle_t *pSPIHandle);
  * 					defined register structure.
  ******************************************************************************/
 void SPI_DeInit(SPI_RegDef_t *pSPIx);
+
+uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint32_t FlagName);
 
 void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len);
 
