@@ -81,6 +81,9 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 
 	uint32_t temp = 0;
 
+	// Enable the peripheral clock.
+	GPIO_PeriClockControl(pGPIOHandle->pGPIOx, ENABLE);
+
 	// Configure the mode of the GPIO Pin
 	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG) {
 		// Generate the mask for the Pin Mode register. Multiply by 2 since the pin register is 2 bits wide.

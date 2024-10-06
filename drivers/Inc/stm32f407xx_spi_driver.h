@@ -164,4 +164,25 @@ void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
  ******************************************************************************/
 void SPI_IRQHandling(SPI_Handle_t *pSPIHandle);
 
+/******************************************************************************
+ * Controls whether the SPI peripheral is on or off.
+ *
+ * @param pSPIx A pointer to the base address of the SPI interface using the
+ * 				defined register structure.
+ * @param EnOrDi Value to represent whether SPI peripheral will be enabled
+ * 				 or disabled.
+ ******************************************************************************/
+void SPI_PeripheralControl(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
+
+/******************************************************************************
+ * Controls the value of the Internal Slave Select bit which is necessary when
+ * using Software Slave Management (SSM).
+ *
+ * @param pSPIx A pointer to the base address of the SPI interface using the
+ * 				defined register structure.
+ * @param EnOrDi Value to represent whether SPI peripheral will be enabled
+ * 				 or disabled.
+ ******************************************************************************/
+void SPI_SSIConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
+
 #endif /* INC_STM32F407XX_SPI_DRIVER_H_ */

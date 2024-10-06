@@ -133,8 +133,8 @@ void SPI2_GPIOInits() {
 	GPIO_Init(&SPIPins);
 
 	// MISO
-	SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_14;
-	GPIO_Init(&SPIPins);
+	//SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_14;
+	//GPIO_Init(&SPIPins);
 
 
 	// MOSI
@@ -143,15 +143,15 @@ void SPI2_GPIOInits() {
 
 
 	// NSS
-	SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_12;
-	GPIO_Init(&SPIPins);
+	//SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_12;
+	//GPIO_Init(&SPIPins);
 
 }
 
 void SPI2_Inits() {
 	SPI_Handle_t SPI2Handle;
 
-	SPI2Handle.pPSIx = SPI2;
+	SPI2Handle.pSPIx = SPI2;
 	SPI2Handle.SPIConfig.SPI_BusConfig = SPI_BUS_CONF_FD;
 	SPI2Handle.SPIConfig.SPI_DeviceMode = SPI_DEVICE_MODE_MASTER;
 	SPI2Handle.SPIConfig.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV2; //8MHz
@@ -172,14 +172,30 @@ void SPI_SendTest() {
 	 * SPI2 NSS  == PB12
 	 * Alternate function 5
 	 */
+
+	// Establish the GPIO pins into SPI2 alternate function.
 	SPI2_GPIOInits();
 
+	// Set the configuration of the SPI peripheral.
 	SPI2_Inits();
 
+	// Sets the internal slave select pin (SSI) to high to
+	// avoid MODF error.
+	SPI_SSIConfig(SPI2, ENABLE);
+
+	// Enable the SPI peripheral.
+	SPI_PeripheralControl(SPI2, ENABLE);
+
+	// Create a test buffer to transmit.
+	char test_data[] = "Hello World!";
+
+	// Send the data over the desired SPI peripheral.
+	SPI_SendData(SPI2, (uint8_t*)test_data, strlen(test_data));
 }
 
 
 int main(void) {
-	led_interrupt();
-	return 0;
+	SPI_SendTest();
+	// Loop forever.
+	while(1);
 }

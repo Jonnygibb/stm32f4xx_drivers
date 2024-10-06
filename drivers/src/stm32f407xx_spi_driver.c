@@ -42,6 +42,9 @@ void SPI_PeriClockControl(SPI_RegDef_t *pSPIx, uint8_t EnOrDi) {
 void SPI_Init(SPI_Handle_t *pSPIHandle) {
 	uint32_t tempreg = 0;
 
+	// Enable the peripheral clock.
+	SPI_PeriClockControl(pSPIHandle->pSPIx, ENABLE);
+
 	// Set the device mode.
 	tempreg |= pSPIHandle->SPIConfig.SPI_DeviceMode << SPI_CR1_MSTR;
 
@@ -124,5 +127,29 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len) {
 			// Increment the pointer to the next buffer item.
 			pTxBuffer++;
 		}
+	}
+}
+
+/*
+ * API function for enabling SPI peripheral.
+ */
+void SPI_PeripheralControl(SPI_RegDef_t *pSPIx, uint8_t EnOrDi) {
+	if(EnOrDi == ENABLE) {
+		pSPIx->CR1 |= (1 << SPI_CR1_SPE);
+	} else {
+		pSPIx->CR1 &= ~(1 << SPI_CR1_SPE);
+	}
+}
+
+
+/*
+ * API function to toggle the internal slave select pin when
+ * using software slave selection mode.
+ */
+void SPI_SSIConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi) {
+	if(EnOrDi == ENABLE) {
+		pSPIx->CR1 |= (1 << SPI_CR1_SSI);
+	} else {
+		pSPIx->CR1 &= ~(1 << SPI_CR1_SSI);
 	}
 }
