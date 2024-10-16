@@ -118,6 +118,20 @@ void EXTI0_IRQHandler() {
 	GPIO_ToggleOutputPin(GPIOD, GPIO_PIN_NO_12);
 }
 
+void GPIO_BtnInits() {
+	GPIO_Handle_t GpioBtn;
+	memset(&GpioBtn, 0, sizeof(GpioBtn));
+
+	// Configure input pin for on-board user button.
+	GpioBtn.pGPIOx = GPIOA;
+	GpioBtn.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_0;
+	GpioBtn.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	GpioBtn.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_VERY_HIGH;
+	GpioBtn.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+
+	GPIO_Init(&GpioBtn);
+}
+
 void SPI2_GPIOInits() {
 	GPIO_Handle_t SPIPins;
 
@@ -143,8 +157,8 @@ void SPI2_GPIOInits() {
 
 
 	// NSS
-	//SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_12;
-	//GPIO_Init(&SPIPins);
+	SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_12;
+	GPIO_Init(&SPIPins);
 
 }
 
@@ -154,11 +168,11 @@ void SPI2_Inits() {
 	SPI2Handle.pSPIx = SPI2;
 	SPI2Handle.SPIConfig.SPI_BusConfig = SPI_BUS_CONF_FD;
 	SPI2Handle.SPIConfig.SPI_DeviceMode = SPI_DEVICE_MODE_MASTER;
-	SPI2Handle.SPIConfig.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV2; //8MHz
+	SPI2Handle.SPIConfig.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV8; //2MHz
 	SPI2Handle.SPIConfig.SPI_DFF = SPI_DFF_8BITS;
 	SPI2Handle.SPIConfig.SPI_CPOL = SPI_CPOL_LOW;
 	SPI2Handle.SPIConfig.SPI_CPHA = SPI_CPHA_LOW;
-	SPI2Handle.SPIConfig.SPI_SSM = SPI_SSM_EN;
+	SPI2Handle.SPIConfig.SPI_SSM = SPI_SSM_DI;
 
 	SPI_Init(&SPI2Handle);
 }
@@ -179,23 +193,49 @@ void SPI_SendTest() {
 	// Set the configuration of the SPI peripheral.
 	SPI2_Inits();
 
+	// Initialise the user button on the microcontroller.
+	GPIO_BtnInits();
+
 	// Sets the internal slave select pin (SSI) to high to
 	// avoid MODF error.
-	SPI_SSIConfig(SPI2, ENABLE);
+	//SPI_SSIConfig(SPI2, ENABLE);
 
-	// Enable the SPI peripheral.
-	SPI_PeripheralControl(SPI2, ENABLE);
+	// Setting SSOE will set the NSS line to low and the
+	// slave device will be activated.
+	// When SSOE is disabled, multiple master nodes could
+	// be used and the NNS will be High.
+	SPI_SSOEConfig(SPI2, ENABLE);
 
-	// Create a test buffer to transmit.
-	char test_data[] = "Hello World!";
+	while(1) {
+		// Wait until the user button is pressed to send on SPI.
+		while(!GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
 
-	// Send the data over the desired SPI peripheral.
-	SPI_SendData(SPI2, (uint8_t*)test_data, strlen(test_data));
+		// Avoid problem with the button debouncing.
+		delay();
+
+		// Enable the SPI peripheral.
+		SPI_PeripheralControl(SPI2, ENABLE);
+
+		// Create a test buffer to transmit.
+		char test_data[] = "According to all known laws of aviation, there is no way a bee should be able to fly";
+
+		// Arduino sketch expects the length of data its recieving
+		// before any actual data.
+		uint8_t data_length = strlen(test_data);
+		SPI_SendData(SPI2, &data_length, 1);
+
+		// Send the data over the desired SPI peripheral.
+		SPI_SendData(SPI2, (uint8_t*)test_data, strlen(test_data));
+
+		// While the SPI is busy, do not disable the peripheral.
+		while(SPI_GetFlagStatus(SPI2, SPI_BSY_FLAG));
+
+		// Disable the SPI peripheral after the send operation.
+		SPI_PeripheralControl(SPI2, DISABLE);
+	}
 }
 
 
 int main(void) {
 	SPI_SendTest();
-	// Loop forever.
-	while(1);
 }
