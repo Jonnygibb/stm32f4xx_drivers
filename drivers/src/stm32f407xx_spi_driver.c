@@ -130,6 +130,32 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len) {
 	}
 }
 
+void SPI_RecieveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len) {
+	while(len > 0){
+
+		// Wait until the RX buffer is empty.
+		while(SPI_GetFlagStatus(pSPIx, SPI_RXNE_FLAG)  == FLAG_RESET);
+
+		// Check the data frame format, 16bit or 8bit.
+		if((pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
+			// 16bit DFF
+			// Typecast here since the pointer is of uint8_t but
+			// two bytes of data are being recieved in 16bit DFF.
+			*((uint16_t*)pRxBuffer) = pSPIx->DR;
+			len--;
+			len--;
+			// Increment the pointer to the next buffer item.
+			(uint16_t*)pRxBuffer++;
+		} else {
+			// 8bit DFF
+			*pRxBuffer = pSPIx->DR;
+			len--;
+			// Increment the pointer to the next buffer item.
+			pRxBuffer++;
+		}
+	}
+}
+
 /*
  * API function for enabling SPI peripheral.
  */

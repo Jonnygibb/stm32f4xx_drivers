@@ -8,6 +8,26 @@
 #include <string.h>
 #include "stm32f407xx.h"
 
+// SPI command codes
+#define COMMAND_LED_CTRL			0x50
+#define COMMAND_SENSOR_READ			0x51
+#define COMMAND_LED_READ			0x52
+#define COMMAND_PRINT				0x53
+#define COMMAND_ID_READ				0x54
+
+#define LED_ON						1
+#define LEF_OFF						0
+
+//arduino analog pins
+#define ANALOG_PIN0					0
+#define ANALOG_PIN1					1
+#define ANALOG_PIN2					2
+#define ANALOG_PIN3					3
+#define ANALOG_PIN4					4
+
+// Arduino LED
+#define LED_PIN						9
+
 void delay() {
 	// Basic delay
 	for(uint32_t i = 0; i < 250000; i++);
@@ -147,8 +167,8 @@ void SPI2_GPIOInits() {
 	GPIO_Init(&SPIPins);
 
 	// MISO
-	//SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_14;
-	//GPIO_Init(&SPIPins);
+	SPIPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_14;
+	GPIO_Init(&SPIPins);
 
 
 	// MOSI
@@ -236,6 +256,80 @@ void SPI_SendTest() {
 }
 
 
-int main(void) {
-	SPI_SendTest();
+uint8_t SPI_VerifyResponse(uint8_t ack_byte) {
+	if (ack_byte == (uint8_t)0xF5) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+
+void SPI_CommandResponse() {
+	// Dummy data that is used to send/recieve while awaiting
+	// response on the MISO line.
+	uint8_t dummy_write = 0xFF;
+	uint8_t dummy_read;
+
+	// Initialise the user button on the microcontroller.
+	GPIO_BtnInits();
+
+	// Establish the GPIO pins into SPI2 alternate function.
+	SPI2_GPIOInits();
+
+	// Set the configuration of the SPI peripheral.
+	SPI2_Inits();
+
+	// Setting SSOE will set the NSS line to low and the
+	// slave device will be activated.
+	// When SSOE is disabled, multiple master nodes could
+	// be used and the NNS will be High.
+	SPI_SSOEConfig(SPI2, ENABLE);
+
+	while(1) {
+		// Wait until the user button is pressed to send on SPI.
+		while(!GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
+
+		// Avoid problem with the button debouncing.
+		delay();
+
+		// Enable the SPI peripheral.
+		SPI_PeripheralControl(SPI2, ENABLE);
+
+		// These commands will be send to an arduino that is
+		// programmed to expect and respond to these defined
+		// commands.
+
+		// Send the first command: CMD_LED_CTRL
+		uint8_t command_code = COMMAND_LED_CTRL;
+		uint8_t ack_byte;
+		uint8_t args[2];
+		SPI_SendData(SPI2, &command_code, 1);
+
+		// Do a dummy read to remove data from the SPI Rx.
+		SPI_RecieveData(SPI2, &dummy_read, 1);
+
+		// Send a dummy byte to recieve the response on the
+		// MISO line.
+		SPI_SendData(SPI2, &dummy_write, 1);
+		SPI_RecieveData(SPI2, &ack_byte, 1);
+
+		if (SPI_VerifyResponse(ack_byte)) {
+			// send arguments
+			args[0] = LED_PIN;
+			args[1] = LED_ON;
+			SPI_SendData(SPI2, args, 2);
+		}
+		// While the SPI is busy, do not disable the peripheral.
+		while(SPI_GetFlagStatus(SPI2, SPI_BSY_FLAG));
+
+		// Disable the SPI peripheral after the send operation.
+		SPI_PeripheralControl(SPI2, DISABLE);
+	}
+}
+
+
+int main() {
+	SPI_CommandResponse();
+	return 0;
 }
