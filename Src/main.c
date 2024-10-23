@@ -153,6 +153,13 @@ void GPIO_BtnInits() {
 }
 
 void SPI2_GPIOInits() {
+	/*
+	 * SPI2 MOSI == PB15
+	 * SPI2 MISO == PB14
+	 * SPI2 SCLK == PB13
+	 * SPI2 NSS  == PB12
+	 * Alternate function 5
+	 */
 	GPIO_Handle_t SPIPins;
 
 	SPIPins.pGPIOx = GPIOB;
@@ -199,13 +206,8 @@ void SPI2_Inits() {
 
 
 void SPI_SendTest() {
-	/*
-	 * SPI2 MOSI == PB15
-	 * SPI2 MISO == PB14
-	 * SPI2 SCLK == PB13
-	 * SPI2 NSS  == PB12
-	 * Alternate function 5
-	 */
+	// This function expects an arduino slave module running the
+	// sketch 001SPISlaveRxString.ino
 
 	// Establish the GPIO pins into SPI2 alternate function.
 	SPI2_GPIOInits();
@@ -266,6 +268,9 @@ uint8_t SPI_VerifyResponse(uint8_t ack_byte) {
 
 
 void SPI_CommandResponse() {
+	// This function expects an arduino slave module running the
+	// sketch 002SPISlaveCmdHandling.ino
+
 	// Dummy data that is used to send/recieve while awaiting
 	// response on the MISO line.
 	uint8_t dummy_write = 0xFF;
@@ -280,10 +285,7 @@ void SPI_CommandResponse() {
 	// Set the configuration of the SPI peripheral.
 	SPI2_Inits();
 
-	// Setting SSOE will set the NSS line to low and the
-	// slave device will be activated.
-	// When SSOE is disabled, multiple master nodes could
-	// be used and the NNS will be High.
+	// Enable since the STM32f407xx is the master node in this example.
 	SPI_SSOEConfig(SPI2, ENABLE);
 
 	while(1) {
@@ -320,6 +322,7 @@ void SPI_CommandResponse() {
 			args[1] = LED_ON;
 			SPI_SendData(SPI2, args, 2);
 		}
+
 		// While the SPI is busy, do not disable the peripheral.
 		while(SPI_GetFlagStatus(SPI2, SPI_BSY_FLAG));
 
@@ -330,6 +333,8 @@ void SPI_CommandResponse() {
 
 
 int main() {
-	SPI_CommandResponse();
+	while(1) {
+		SPI_CommandResponse();
+	}
 	return 0;
 }

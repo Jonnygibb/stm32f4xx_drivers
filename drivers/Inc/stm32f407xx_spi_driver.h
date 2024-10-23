@@ -85,7 +85,7 @@ typedef struct {
 #define SPI_SSM_EN					1
 
 /*
- * SPI related status flag definitions.
+ * @FlagName
  */
 #define SPI_RXNE_FLAG				(1 << SPI_SR_RXNE)
 #define SPI_TXE_FLAG				(1 << SPI_SR_TXE)
@@ -130,10 +130,42 @@ void SPI_Init(SPI_Handle_t *pSPIHandle);
  ******************************************************************************/
 void SPI_DeInit(SPI_RegDef_t *pSPIx);
 
+/******************************************************************************
+ * Checks the status of a user defined flag. List of flags can be found in
+ * @FlagName.
+ *
+ * @param *pSPIx A pointer to the base address of the SPI interface using the
+ * 					defined register structure.
+ * @param FlagName A user defined flag to check the status of.
+ *
+ */
 uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint32_t FlagName);
 
+/*****************************************************************************
+ * Function to write data to the SPI tx data register. This is performed
+ * through the SPI->DR register depending on whether a read or write action
+ * is requested. Function will iterate until the entire message has been sent
+ * over the requested peripheral.
+ *
+ * @param *pSPIx A pointer to the base address of the SPI interface using the
+ * 					defined register structure.
+ * @param *pTxBuffer A pointer to a buffer that will be writted to the SPI Tx
+ * 					 buffer.
+ * @param len User defined length to determine how much data to write.
+ */
 void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len);
 
+/*****************************************************************************
+ * Function to read the data recieved by the SPI rx data register. This
+ * action clears the SPI rx buffer and allows the stm32f407xx to receive more
+ * data. The function reads a length given by the len param.
+ *
+ * @param *pSPIx A pointer to the base address of the SPI interface using the
+ * 					defined register structure.
+ * @param *pRxBuffer A pointer to a buffer to store information read from
+ * 		   			 the SPI rx buffer.
+ * @param len User defined length to determine how much data to read.
+ */
 void SPI_RecieveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len);
 
 /******************************************************************************
@@ -185,6 +217,19 @@ void SPI_PeripheralControl(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
  ******************************************************************************/
 void SPI_SSIConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
 
+/*****************************************************************************
+ * Configures the setting of the Slave select output enable bit in the
+ * SPI_CR2 register.
+ *
+ * ENABLE == Slave select output is enabled. Stm32f407xx is the master.
+ * 			 Mulitmaster not available.
+ * DISABLE == Slave select output is disabled. Multimaster is available.
+ *
+ * @param pSPIx A pointer to the base address of the SPI interface using the
+ * 				defined register structure.
+ * @param EnOrDi Value to represent whether SPI peripheral will be enabled
+ * 				 or disabled.
+ */
 void SPI_SSOEConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
 
 #endif /* INC_STM32F407XX_SPI_DRIVER_H_ */

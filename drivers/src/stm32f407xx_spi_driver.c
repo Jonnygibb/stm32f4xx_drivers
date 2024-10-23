@@ -133,7 +133,7 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len) {
 void SPI_RecieveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len) {
 	while(len > 0){
 
-		// Wait until the RX buffer is empty.
+		// Wait until the RX buffer is full.
 		while(SPI_GetFlagStatus(pSPIx, SPI_RXNE_FLAG)  == FLAG_RESET);
 
 		// Check the data frame format, 16bit or 8bit.
