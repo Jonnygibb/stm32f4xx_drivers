@@ -302,7 +302,7 @@ void SPI_CommandResponse() {
 		// programmed to expect and respond to these defined
 		// commands.
 
-		// Send the first command: CMD_LED_CTRL
+		// ************** CMD_LED_CTRL *********************
 		uint8_t command_code = COMMAND_LED_CTRL;
 		uint8_t ack_byte;
 		uint8_t args[2];
@@ -322,6 +322,45 @@ void SPI_CommandResponse() {
 			args[1] = LED_ON;
 			SPI_SendData(SPI2, args, 2);
 		}
+		// ************** CMD_LED_CTRL *********************
+
+		// ************* CMD_SENSOR_READ *******************
+
+		// Wait until the user button is pressed to send on SPI.
+		while(!GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
+
+		// Avoid problem with the button debouncing.
+		delay();
+
+		command_code = COMMAND_SENSOR_READ;
+		SPI_SendData(SPI2, &command_code, 1);
+
+		// Do a dummy read to remove data from the SPI Rx.
+		SPI_RecieveData(SPI2, &dummy_read, 1);
+
+		// Send a dummy byte to recieve the response on the
+		// MISO line.
+		SPI_SendData(SPI2, &dummy_write, 1);
+		SPI_RecieveData(SPI2, &ack_byte, 1);
+
+		if (SPI_VerifyResponse(ack_byte)) {
+			// send arguments
+			args[0] = ANALOG_PIN0;
+			SPI_SendData(SPI2, args, 1);
+		}
+
+		// Do a dummy read to remove data from the SPI Rx.
+		SPI_RecieveData(SPI2, &dummy_read, 1);
+
+		// Send a dummy byte to recieve the response on the
+		// MISO line.
+		SPI_SendData(SPI2, &dummy_write, 1);
+
+		// Read the response data to the command analog read
+		// on PIN0.
+		uint8_t analog_read;
+		SPI_RecieveData(SPI2, &analog_read, len);
+		// ************* CMD_SENSOR_READ *******************
 
 		// While the SPI is busy, do not disable the peripheral.
 		while(SPI_GetFlagStatus(SPI2, SPI_BSY_FLAG));
