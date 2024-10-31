@@ -166,7 +166,7 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len);
  * 		   			 the SPI rx buffer.
  * @param len User defined length to determine how much data to read.
  */
-void SPI_RecieveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len);
+void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len);
 
 /******************************************************************************
  * Enables or disables the desired interrupt in the micro-controllers nested

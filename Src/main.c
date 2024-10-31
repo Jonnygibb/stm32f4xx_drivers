@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include "stm32f407xx.h"
+#include <stdio.h>
 
 // SPI command codes
 #define COMMAND_LED_CTRL			0x50
@@ -195,7 +196,7 @@ void SPI2_Inits() {
 	SPI2Handle.pSPIx = SPI2;
 	SPI2Handle.SPIConfig.SPI_BusConfig = SPI_BUS_CONF_FD;
 	SPI2Handle.SPIConfig.SPI_DeviceMode = SPI_DEVICE_MODE_MASTER;
-	SPI2Handle.SPIConfig.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV8; //2MHz
+	SPI2Handle.SPIConfig.SPI_SclkSpeed = SPI_SCLK_SPEED_DIV32;
 	SPI2Handle.SPIConfig.SPI_DFF = SPI_DFF_8BITS;
 	SPI2Handle.SPIConfig.SPI_CPOL = SPI_CPOL_LOW;
 	SPI2Handle.SPIConfig.SPI_CPHA = SPI_CPHA_LOW;
@@ -271,109 +272,261 @@ void SPI_CommandResponse() {
 	// This function expects an arduino slave module running the
 	// sketch 002SPISlaveCmdHandling.ino
 
-	// Dummy data that is used to send/recieve while awaiting
-	// response on the MISO line.
-	uint8_t dummy_write = 0xFF;
+	uint8_t dummy_write = 0xff;
 	uint8_t dummy_read;
 
-	// Initialise the user button on the microcontroller.
+	//initialise_monitor_handles();
+
+	printf("Application is running\n");
+
 	GPIO_BtnInits();
 
-	// Establish the GPIO pins into SPI2 alternate function.
+	//this function is used to initialize the GPIO pins to behave as SPI2 pins
 	SPI2_GPIOInits();
 
-	// Set the configuration of the SPI peripheral.
+	//This function is used to initialize the SPI2 peripheral parameters
 	SPI2_Inits();
 
-	// Enable since the STM32f407xx is the master node in this example.
-	SPI_SSOEConfig(SPI2, ENABLE);
+	printf("SPI Init. done\n");
 
-	while(1) {
-		// Wait until the user button is pressed to send on SPI.
-		while(!GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
+	/*
+	* making SSOE 1 does NSS output enable.
+	* The NSS pin is automatically managed by the hardware.
+	* i.e when SPE=1 , NSS will be pulled to low
+	* and NSS pin will be high when SPE=0
+	*/
+	SPI_SSOEConfig(SPI2,ENABLE);
 
-		// Avoid problem with the button debouncing.
+	while(1)
+	{
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
+
+		//to avoid button de-bouncing related issues 200ms of delay
 		delay();
 
-		// Enable the SPI peripheral.
-		SPI_PeripheralControl(SPI2, ENABLE);
+		//enable the SPI2 peripheral
+		SPI_PeripheralControl(SPI2,ENABLE);
 
-		// These commands will be send to an arduino that is
-		// programmed to expect and respond to these defined
-		// commands.
+		//1. CMD_LED_CTRL  	<pin no(1)>     <value(1)>
 
-		// ************** CMD_LED_CTRL *********************
-		uint8_t command_code = COMMAND_LED_CTRL;
-		uint8_t ack_byte;
+		uint8_t commandcode = COMMAND_LED_CTRL;
+		uint8_t ackbyte;
 		uint8_t args[2];
-		SPI_SendData(SPI2, &command_code, 1);
 
-		// Do a dummy read to remove data from the SPI Rx.
-		SPI_RecieveData(SPI2, &dummy_read, 1);
+		//send command
+		SPI_SendData(SPI2,&commandcode,1);
 
-		// Send a dummy byte to recieve the response on the
-		// MISO line.
-		SPI_SendData(SPI2, &dummy_write, 1);
-		SPI_RecieveData(SPI2, &ack_byte, 1);
+		//do dummy read to clear off the RXNE
+		SPI_ReceiveData(SPI2,&dummy_read,1);
 
-		if (SPI_VerifyResponse(ack_byte)) {
-			// send arguments
+
+		//Send some dummy bits (1 byte) fetch the response from the slave
+		SPI_SendData(SPI2,&dummy_write,1);
+
+		//read the ack byte received
+		SPI_ReceiveData(SPI2,&ackbyte,1);
+
+		if( SPI_VerifyResponse(ackbyte))
+		{
 			args[0] = LED_PIN;
 			args[1] = LED_ON;
-			SPI_SendData(SPI2, args, 2);
+
+			//send arguments
+			SPI_SendData(SPI2,args,2);
+			// dummy read
+			SPI_ReceiveData(SPI2,args,2);
+			printf("COMMAND_LED_CTRL Executed\n");
 		}
-		// ************** CMD_LED_CTRL *********************
 
-		// ************* CMD_SENSOR_READ *******************
+		//end of COMMAND_LED_CTRL
 
-		// Wait until the user button is pressed to send on SPI.
-		while(!GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
 
-		// Avoid problem with the button debouncing.
+
+
+		//2. CMD_SENOSR_READ   <analog pin number(1) >
+
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
+
+		//to avoid button de-bouncing related issues 200ms of delay
 		delay();
 
-		command_code = COMMAND_SENSOR_READ;
-		SPI_SendData(SPI2, &command_code, 1);
+		commandcode = COMMAND_SENSOR_READ;
 
-		// Do a dummy read to remove data from the SPI Rx.
-		SPI_RecieveData(SPI2, &dummy_read, 1);
+		//send command
+		SPI_SendData(SPI2,&commandcode,1);
 
-		// Send a dummy byte to recieve the response on the
-		// MISO line.
-		SPI_SendData(SPI2, &dummy_write, 1);
-		SPI_RecieveData(SPI2, &ack_byte, 1);
+		//do dummy read to clear off the RXNE
+		SPI_ReceiveData(SPI2,&dummy_read,1);
 
-		if (SPI_VerifyResponse(ack_byte)) {
-			// send arguments
+
+		//Send some dummy byte to fetch the response from the slave
+		SPI_SendData(SPI2,&dummy_write,1);
+
+		//read the ack byte received
+		SPI_ReceiveData(SPI2,&ackbyte,1);
+
+		if( SPI_VerifyResponse(ackbyte))
+		{
 			args[0] = ANALOG_PIN0;
-			SPI_SendData(SPI2, args, 1);
+
+			//send arguments
+			SPI_SendData(SPI2,args,1); //sending one byte of
+
+			//do dummy read to clear off the RXNE
+			SPI_ReceiveData(SPI2,&dummy_read,1);
+
+			//insert some delay so that slave can ready with the data
+			delay();
+
+			//Send some dummy bits (1 byte) fetch the response from the slave
+			SPI_SendData(SPI2,&dummy_write,1);
+
+			uint8_t analog_read;
+			SPI_ReceiveData(SPI2,&analog_read,1);
+			printf("COMMAND_SENSOR_READ %d\n",analog_read);
 		}
 
-		// Do a dummy read to remove data from the SPI Rx.
-		SPI_RecieveData(SPI2, &dummy_read, 1);
+		//3.  CMD_LED_READ 	 <pin no(1) >
 
-		// Send a dummy byte to recieve the response on the
-		// MISO line.
-		SPI_SendData(SPI2, &dummy_write, 1);
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
 
-		// Read the response data to the command analog read
-		// on PIN0.
-		uint8_t analog_read;
-		SPI_RecieveData(SPI2, &analog_read, len);
-		// ************* CMD_SENSOR_READ *******************
+		//to avoid button de-bouncing related issues 200ms of delay
+		delay();
 
-		// While the SPI is busy, do not disable the peripheral.
-		while(SPI_GetFlagStatus(SPI2, SPI_BSY_FLAG));
+		commandcode = COMMAND_LED_READ;
 
-		// Disable the SPI peripheral after the send operation.
-		SPI_PeripheralControl(SPI2, DISABLE);
+		//send command
+		SPI_SendData(SPI2,&commandcode,1);
+
+		//do dummy read to clear off the RXNE
+		SPI_ReceiveData(SPI2,&dummy_read,1);
+
+		//Send some dummy byte to fetch the response from the slave
+		SPI_SendData(SPI2,&dummy_write,1);
+
+		//read the ack byte received
+		SPI_ReceiveData(SPI2,&ackbyte,1);
+
+		if( SPI_VerifyResponse(ackbyte))
+		{
+			args[0] = LED_PIN;
+
+			//send arguments
+			SPI_SendData(SPI2,args,1); //sending one byte of
+
+			//do dummy read to clear off the RXNE
+			SPI_ReceiveData(SPI2,&dummy_read,1);
+
+			//insert some delay so that slave can ready with the data
+			delay();
+
+			//Send some dummy bits (1 byte) fetch the response from the slave
+			SPI_SendData(SPI2,&dummy_write,1);
+
+			uint8_t led_status;
+			SPI_ReceiveData(SPI2,&led_status,1);
+			printf("COMMAND_READ_LED %d\n",led_status);
+
+		}
+
+		//4. CMD_PRINT 		<len(2)>  <message(len) >
+
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
+
+		//to avoid button de-bouncing related issues 200ms of delay
+		delay();
+
+		commandcode = COMMAND_PRINT;
+
+		//send command
+		SPI_SendData(SPI2,&commandcode,1);
+
+		//do dummy read to clear off the RXNE
+		SPI_ReceiveData(SPI2,&dummy_read,1);
+
+		//Send some dummy byte to fetch the response from the slave
+		SPI_SendData(SPI2,&dummy_write,1);
+
+		//read the ack byte received
+		SPI_ReceiveData(SPI2,&ackbyte,1);
+
+		uint8_t message[] = "Hello ! How are you ??";
+		if( SPI_VerifyResponse(ackbyte))
+		{
+			args[0] = strlen((char*)message);
+
+			//send arguments
+			SPI_SendData(SPI2,args,1); //sending length
+
+			//do dummy read to clear off the RXNE
+			SPI_ReceiveData(SPI2,&dummy_read,1);
+
+			delay();
+
+			//send message
+			for(int i = 0 ; i < args[0] ; i++){
+				SPI_SendData(SPI2,&message[i],1);
+				SPI_ReceiveData(SPI2,&dummy_read,1);
+			}
+
+			printf("COMMAND_PRINT Executed \n");
+		}
+
+		//5. CMD_ID_READ
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
+
+		//to avoid button de-bouncing related issues 200ms of delay
+		delay();
+
+		commandcode = COMMAND_ID_READ;
+
+		//send command
+		SPI_SendData(SPI2,&commandcode,1);
+
+		//do dummy read to clear off the RXNE
+		SPI_ReceiveData(SPI2,&dummy_read,1);
+
+		//Send some dummy byte to fetch the response from the slave
+		SPI_SendData(SPI2,&dummy_write,1);
+
+		//read the ack byte received
+		SPI_ReceiveData(SPI2,&ackbyte,1);
+
+		uint8_t id[11];
+		uint32_t i=0;
+		if( SPI_VerifyResponse(ackbyte))
+		{
+			//read 10 bytes id from the slave
+			for(  i = 0 ; i < 10 ; i++)
+			{
+				//send dummy byte to fetch data from slave
+				SPI_SendData(SPI2,&dummy_write,1);
+				SPI_ReceiveData(SPI2,&id[i],1);
+			}
+
+			id[10] = '\0';
+
+			printf("COMMAND_ID : %s \n",id);
+
+		}
+
+		//lets confirm SPI is not busy
+		while( SPI_GetFlagStatus(SPI2,SPI_BSY_FLAG) );
+
+		//Disable the SPI2 peripheral
+		SPI_PeripheralControl(SPI2,DISABLE);
+
+		printf("SPI Communication Closed\n");
 	}
 }
 
 
 int main() {
-	while(1) {
-		SPI_CommandResponse();
-	}
+	SPI_CommandResponse();
 	return 0;
 }
