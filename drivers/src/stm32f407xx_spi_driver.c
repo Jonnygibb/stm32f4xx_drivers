@@ -191,3 +191,44 @@ void SPI_SSOEConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi) {
 		pSPIx->CR2 &= ~(1 << SPI_CR2_SSOE);
 	}
 }
+
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t len) {
+	uint8_t state = pSPIHandle->TxState;
+
+	// Only attempt to transmit if the SPI peripheral is not busy transmitting.
+	if(state != SPI_BUSY_IN_TX){
+		// Save the Tx buffer & length in a global variable. In this case the
+		// SPI handle was modified.
+		pSPIHandle->pTxBuffer = pTxBuffer;
+		pSPIHandle->TxLen = len;
+
+		// Mark the SPI peripheral as busy during this transmission.
+		pSPIHandle->TxState = SPI_BUSY_IN_TX;
+
+		// Enable the TXEIE to cause an interrupt to be raised when TXE flag is set.
+		// I.E when the transmit buffer is empty, interrupt.
+		pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_TXEIE);
+	}
+	return state;
+}
+
+
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t len) {
+	uint8_t state = pSPIHandle->RxState;
+
+	// Only attempt to receive if the SPI peripheral is not busy receiving.
+	if(state != SPI_BUSY_IN_RX){
+		// Save the Rx buffer & length in a global variable. In this case the
+		// SPI handle was modified to accomodate the new variables.
+		pSPIHandle->pRxBuffer = pRxBuffer;
+		pSPIHandle->RxLen = len;
+
+		// Mark the SPI peripheral as busy during this reception of data.
+		pSPIHandle->RxState = SPI_BUSY_IN_RX;
+
+		// Enable the RNNEIE to cause an interrupt to be raised when RXNE flag is set.
+		// I.E when the receive buffer is NOT empty, interrupt.
+		pSPIHandle->pSPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
+	}
+	return state;
+}

@@ -31,6 +31,12 @@ typedef struct {
 typedef struct {
 	SPI_RegDef_t *pSPIx;
 	SPI_Config_t SPIConfig;
+	uint8_t		 *pTxBuffer;
+	uint8_t		 *pRxBuffer;
+	uint32_t	 TxLen;
+	uint32_t	 RxLen;
+	uint8_t		 TxState;
+	uint8_t		 Rxstate;
 } SPI_Handle_t;
 
 /*
@@ -96,6 +102,13 @@ typedef struct {
 #define SPI_OCR_FLAG				(1 << SPI_SR_OVR)
 #define SPI_BSY_FLAG				(1 << SPI_SR_BSY)
 #define SPI_FRE_FLAG				(1 << SPI_SR_FRE)
+
+/*
+ * SPI Application States
+ */
+#define SPI_READY					0
+#define SPI_BUSY_IN_RX				0
+#define SPI_BUSY_IN_TX				0
 
 /********************************************************************************************
  * 								APIs supported by this driver
@@ -167,6 +180,35 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len);
  * @param len User defined length to determine how much data to read.
  */
 void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len);
+
+/*****************************************************************************
+ * Function to write data to the SPI tx data register. This is performed
+ * through the SPI->DR register depending on whether a read or write action
+ * is requested. Function will iterate until the entire message has been sent
+ * over the requested peripheral. This version of the API uses interrupts
+ * rather than blocking calls.
+ *
+ * @param *pSPIHandle A pointer to a SPI_Handle_t structure that is contains
+ * 						the desired configuration for the SPI interface.
+ * @param *pTxBuffer A pointer to a buffer that will be writted to the SPI Tx
+ * 					 buffer.
+ * @param len User defined length to determine how much data to write.
+ */
+uint8_t SPI_SendDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pTxBuffer, uint32_t len);
+
+/*****************************************************************************
+ * Function to read the data recieved by the SPI rx data register. This
+ * action clears the SPI rx buffer and allows the stm32f407xx to receive more
+ * data. The function reads a length given by the len param. This version of
+ * the API uses interrupts rather than blocking calls.
+ *
+ * @param *pSPIHandle A pointer to a SPI_Handle_t structure that is contains
+ * 						the desired configuration for the SPI interface.
+ * @param *pRxBuffer A pointer to a buffer to store information read from
+ * 		   			 the SPI rx buffer.
+ * @param len User defined length to determine how much data to read.
+ */
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t len);
 
 /******************************************************************************
  * Enables or disables the desired interrupt in the micro-controllers nested
