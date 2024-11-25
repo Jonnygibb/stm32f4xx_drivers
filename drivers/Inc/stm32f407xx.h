@@ -9,6 +9,7 @@
 #define INC_STM32F407XX_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define __vo volatile	// Shorthand volatile macro
 

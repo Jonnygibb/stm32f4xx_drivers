@@ -36,7 +36,7 @@ typedef struct {
 	uint32_t	 TxLen;
 	uint32_t	 RxLen;
 	uint8_t		 TxState;
-	uint8_t		 Rxstate;
+	uint8_t		 RxState;
 } SPI_Handle_t;
 
 /*
@@ -109,6 +109,14 @@ typedef struct {
 #define SPI_READY					0
 #define SPI_BUSY_IN_RX				0
 #define SPI_BUSY_IN_TX				0
+
+/*
+ * SPI Application Events
+ */
+#define SPI_EVENT_TX_CMPLT			1
+#define SPI_EVENT_RX_CMPLT			2
+#define SPI_EVENT_OVR_ERROR			3
+#define SPI_EVENT_CRC_ERR			4
 
 /********************************************************************************************
  * 								APIs supported by this driver

@@ -232,3 +232,76 @@ uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t
 	}
 	return state;
 }
+
+
+void SPI_IRQHandling(SPI_Handle_t *pSPIHandle) {
+	uint8_t temp1, temp2;
+
+	// First, check whether transmit buffer is empty.
+	// TXEIE = Transmit buffer empty interrupt enable.
+	temp1 = pSPIHandle->pSPIx->SR & (1 << SPI_SR_TXE);
+	temp2 = pSPIHandle->pSPIx->CR2 & (1 << SPI_CR2_TXEIE);
+
+	if(temp1 && temp2) {
+		// Handle TXE
+		spi_txe_interrupt_handle();
+	}
+
+	// Next, check whether receive buffer is not empty.
+	// RXNEIE = Receive buffer not empty interrupt enable.
+	temp1 = pSPIHandle->pSPIx->SR & (1 << SPI_SR_RXNE);
+	temp2 = pSPIHandle->pSPIx->CR2 & (1 << SPI_CR2_RXNEIE);
+
+	if(temp1 && temp2) {
+		// Handle RXNE
+		spi_rxne_interrupt_handle();
+	}
+
+	// Finally, check whether an overrun error has occured.
+	// Overrun = next frame received while the previous frame
+	// has not yet been completed.
+	// ERRIE = Error interrupt enable.
+	temp1 = pSPIHandle->pSPIx->SR & (1 << SPI_SR_OVR);
+	temp2 = pSPIHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE);
+
+	if(temp1 && temp2) {
+		// Handle OVR
+		spi_ovr_err_interrupt_handle();
+	}
+}
+
+static void spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle) {
+	// Check the data frame format, 16bit or 8bit.
+	if((pSPIHandle->pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
+		// 16bit DFF
+		// Typecast here since the pointer is of uint8_t but
+		// two bytes of data are being sent in 16bit DFF.
+		pSPIHandle->pSPIx->DR = *((uint16_t*)pSPIHandle->pTxBuffer);
+		pSPIHandle->TxLen--;
+		pSPIHandle->TxLen--;
+		// Increment the pointer to the next buffer item.
+		(uint16_t*)pSPIHandle->pTxBuffer++;
+	} else {
+		// 8bit DFF
+		pSPIHandle->pSPIx->DR = *pSPIHandle->pTxBuffer;
+		pSPIHandle->TxLen--;
+		// Increment the pointer to the next buffer item.
+		pSPIHandle->pTxBuffer++;
+	}
+
+	if(!pSPIHandle->TxLen) {
+		// No more data left to transmit if TxLen is zero.
+		// Close SPI transmission and inform application.
+
+		// Clear the transmit buffer empty interrupt.
+		pSPIHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
+		pSPIHandle->pTxBuffer = NULL;
+		pSPIHandle->TxLen = 0;
+		pSPIHandle->TxState = SPI_READY;
+		SPI_ApplicationEventCallback(pSPIHandle, SPI_EVENT_TX_CMPLT);
+
+
+	}
+}
+static void spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle);
+static void spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
