@@ -282,4 +282,14 @@ void SPI_SSIConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
  */
 void SPI_SSOEConfig(SPI_RegDef_t *pSPIx, uint8_t EnOrDi);
 
+void SPI_ClearOVRFlag(SPI_RegDef_t *pSPIx);
+void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle);
+void SPI_CloseReception(SPI_Handle_t *pSPIHandle);
+
+
+/*
+ * Application callback
+ */
+void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle, uint8_t Event);
+
 #endif /* INC_STM32F407XX_SPI_DRIVER_H_ */

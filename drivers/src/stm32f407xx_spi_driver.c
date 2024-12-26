@@ -7,6 +7,10 @@
 
 #include "stm32f407xx_spi_driver.h"
 
+static void  spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle);
+static void  spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle);
+static void  spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
+
 /*
  * Peripheral Clock Setup
  */
@@ -244,7 +248,7 @@ void SPI_IRQHandling(SPI_Handle_t *pSPIHandle) {
 
 	if(temp1 && temp2) {
 		// Handle TXE
-		spi_txe_interrupt_handle();
+		spi_txe_interrupt_handle(pSPIHandle);
 	}
 
 	// Next, check whether receive buffer is not empty.
@@ -254,7 +258,7 @@ void SPI_IRQHandling(SPI_Handle_t *pSPIHandle) {
 
 	if(temp1 && temp2) {
 		// Handle RXNE
-		spi_rxne_interrupt_handle();
+		spi_rxne_interrupt_handle(pSPIHandle);
 	}
 
 	// Finally, check whether an overrun error has occured.
@@ -266,7 +270,7 @@ void SPI_IRQHandling(SPI_Handle_t *pSPIHandle) {
 
 	if(temp1 && temp2) {
 		// Handle OVR
-		spi_ovr_err_interrupt_handle();
+		spi_ovr_err_interrupt_handle(pSPIHandle);
 	}
 }
 
@@ -294,14 +298,81 @@ static void spi_txe_interrupt_handle(SPI_Handle_t *pSPIHandle) {
 		// Close SPI transmission and inform application.
 
 		// Clear the transmit buffer empty interrupt.
-		pSPIHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
-		pSPIHandle->pTxBuffer = NULL;
-		pSPIHandle->TxLen = 0;
-		pSPIHandle->TxState = SPI_READY;
+		SPI_CloseTransmission(pSPIHandle);
 		SPI_ApplicationEventCallback(pSPIHandle, SPI_EVENT_TX_CMPLT);
 
 
 	}
 }
-static void spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle);
-static void spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle);
+
+static void spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle) {
+	// Check the data frame format, 16bit or 8bit.
+	if((pSPIHandle->pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
+		// 16bit DFF
+		// Typecast here since the pointer is of uint8_t but
+		// two bytes of data are being received in 16bit DFF.
+		*((uint16_t*)pSPIHandle->pRxBuffer) = (uint16_t)pSPIHandle->pSPIx->DR;
+		pSPIHandle->RxLen -= 2;	// Reduce the receive length by 2.
+		pSPIHandle->pRxBuffer--; // Move the pointer back by 2 bytes.
+		pSPIHandle->pRxBuffer--;
+	} else {
+		// 8bit DFF
+		*(pSPIHandle->pRxBuffer) = (uint8_t)pSPIHandle->pSPIx->DR;
+		pSPIHandle->RxLen--;
+		pSPIHandle->pRxBuffer--; // Move the pointer back 1 byte.
+	}
+
+	if(!pSPIHandle->RxLen) {
+		// No more data left to recieve if RxLen is zero.
+		// Close SPI transmission and inform application.
+
+		// Clear the receive buffer not empty interrupt.
+		SPI_CloseReception(pSPIHandle);
+		SPI_ApplicationEventCallback(pSPIHandle, SPI_EVENT_RX_CMPLT);
+	}
+}
+
+
+static void spi_ovr_err_interrupt_handle(SPI_Handle_t *pSPIHandle) {
+	// Clear the overrun flag.
+	uint8_t temp;
+	if(pSPIHandle->TxState != SPI_BUSY_IN_TX) {
+		temp = pSPIHandle->pSPIx->DR;
+		temp = pSPIHandle->pSPIx->SR;
+	}
+	(void)temp;
+
+	// Inform the application.
+	SPI_ApplicationEventCallback(pSPIHandle, SPI_EVENT_OVR_ERROR);
+}
+
+
+
+__weak void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle, uint8_t Event) {
+	// Weak Declaration. Application should override this.
+}
+
+void SPI_ClearOVRFlag(SPI_RegDef_t *pSPIx) {
+	uint8_t temp;
+	temp = pSPIx->DR;
+	temp = pSPIx->SR;
+	(void)temp;
+}
+
+
+void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle) {
+	// Clear the transmit buffer empty interrupt.
+	pSPIHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
+	pSPIHandle->pTxBuffer = NULL;
+	pSPIHandle->TxLen = 0;
+	pSPIHandle->TxState = SPI_READY;
+}
+
+
+void SPI_CloseReception(SPI_Handle_t *pSPIHandle) {
+	// Clear the receive buffer not empty interrupt.
+	pSPIHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE);
+	pSPIHandle->pRxBuffer = NULL;
+	pSPIHandle->RxLen = 0;
+	pSPIHandle->RxState = SPI_READY;
+}

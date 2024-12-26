@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 #define __vo volatile	// Shorthand volatile macro
+#define __weak __attribute__((weak)) // Shorthand weak macro
 
 /****************************** Processor Specific Details ******************************
  *
