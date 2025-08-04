@@ -219,9 +219,9 @@ typedef struct {
 #define SPI2						((SPI_RegDef_t*)SPI2_BASEADDR)
 #define SPI3						((SPI_RegDef_t*)SPI3_BASEADDR)
 
-#define I2C1_BASEADDR				((I2C_RegDef_t*)I2C1_BASEADDR)
-#define I2C2_BASEADDR				((I2C_RegDef_t*)I2C2_BASEADDR)
-#define I2C3_BASEADDR				((I2C_RegDef_t*)I2C3_BASEADDR)
+#define I2C1						((I2C_RegDef_t*)I2C1_BASEADDR)
+#define I2C2						((I2C_RegDef_t*)I2C2_BASEADDR)
+#define I2C3						((I2C_RegDef_t*)I2C3_BASEADDR)
 
 #define RCC							((RCC_RegDef_t*)RCC_BASEADDR)
 #define EXTI						((EXTI_RegDef_t*)EXTI_BASEADDR)
