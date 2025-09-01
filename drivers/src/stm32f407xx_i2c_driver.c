@@ -115,4 +115,25 @@ uint32_t RCC_GetPCLK1Value(void) {
 	tempreg |= (1 << 14);
 	pI2CHandle->pI2Cx->I2C_OAR1 = tempreg;
 
+	// CCR calculations
+	uint16_t ccr_value = 0;
+	tempreg = 0;
+
+	if (pI2CHandle->I2C_Config.I2C_SCLSpeed <= I2C_SCL_SPEED_SM) {
+		// Standard Mode
+		ccr_value = (RCC_GetPCLK1Value() / (2 * pI2CHandle->I2C_Config.I2C_SCLSpeed));
+		// Mask bits since CCR is only 12 bits
+		tempreg |= (ccr_value & 0xFFF);
+	} else {
+		// Fast Mode
+		tempreg |= (1 << 15);
+		tempreg |= (pI2CHandle->I2C_Config.I2C_FMDutyCycle << 14);
+		if(pI2CHandle->I2C_Config.I2C_FMDutyCycle == I2C_FM_DUTY_2){
+			ccr_value = (RCC_GetPCLK1Value() / (3 * pI2CHandle->I2C_Config.I2C_SCLSpeed));
+		} else {
+			ccr_value = (RCC_GetPCLK1Value() / (25 * pI2CHandle->I2C_Config.I2C_SCLSpeed));
+		}
+		tempreg |= (ccr_value & 0xFFF);
+	}
+	pI2CHandle->pI2Cx->I2C_CCR = tempreg;
 }
