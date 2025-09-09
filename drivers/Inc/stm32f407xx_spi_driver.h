@@ -107,8 +107,8 @@ typedef struct {
  * SPI Application States
  */
 #define SPI_READY					0
-#define SPI_BUSY_IN_RX				0
-#define SPI_BUSY_IN_TX				0
+#define SPI_BUSY_IN_RX				1
+#define SPI_BUSY_IN_TX				2
 
 /*
  * SPI Application Events
@@ -227,7 +227,7 @@ uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t
  * @param EnOrDI	Integer value to enable or disable the peripheral clock. Can
  * 					be 1 or 0. Alternatively use macro ENABLE or DISABLE.
  ******************************************************************************/
-void SPI_IRQConfig(uint8_t IRQNumber, uint8_t EnOrDi);
+void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
 
 /******************************************************************************
  * Sets the interrupt priority in the NVIC priority register.

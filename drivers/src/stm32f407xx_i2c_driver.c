@@ -11,6 +11,33 @@
 uint16_t AHB_PreScaler[8] = {2,4,8,16,64,128,256,512};
 uint8_t APB1_PreScaler[4] = {2,4,8,16};
 
+static void I2C_GenerateStartCondition(I2C_RegDef_t *pI2Cx);
+static void I2C_ExecuteAddressPhase(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr);
+static void I2C_ClearADDRFlag(I2C_RegDef_t *pI2Cx);
+static void I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
+
+static void I2C_GenerateStartCondition(I2C_RegDef_t *pI2Cx){
+	pI2Cx->I2C_CR1 |= (1 << I2C_CR1_START);
+}
+
+static void I2C_ExecuteAddressPhase(I2C_RegDef_t *pI2Cx, uint8_t SlaveAddr) {
+	// Shift left to make room for r/w bit.
+	SlaveAddr = SlaveAddr << 1;
+	SlaveAddr &= ~(1);
+	pI2Cx->I2C_DR = SlaveAddr;
+}
+
+static void I2C_ClearADDRFlag(I2C_RegDef_t *pI2Cx) {
+	uint32_t dummyRead = pI2Cx->I2C_SR1;
+	dummyRead = pI2Cx->I2C_SR2;
+	(void)dummyRead;
+}
+
+static void I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx) {
+	pI2Cx->I2C_CR1 |= (1 << I2C_CR1_STOP);
+}
+
+
 /*
  * Peripheral Clock Setup
  */
@@ -45,14 +72,14 @@ void I2C_PeriClockControl(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi) {
  */
 void I2C_PeripheralControl(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi) {
     if (EnOrDi == ENABLE) {
-        pI2Cx->CR1 |= (1 << I2C_CR1_PE);
+        pI2Cx->I2C_CR1 |= (1 << I2C_CR1_PE);
     } else {
-        pI2Cx->CR1 &= ~(1 << 0);
+        pI2Cx->I2C_CR1 &= ~(1 << 0);
     }
 }
 
 uint32_t RCC_GetPLLOutputClock() {
-
+	return 0;
 }
 
 /*
@@ -78,7 +105,7 @@ uint32_t RCC_GetPCLK1Value(void) {
 	if (temp < 8) {
 		ahbp = 1;
 	} else {
-		AHB_PreScaler[temp-8];
+		ahbp = AHB_PreScaler[temp-8];
 	}
 
 	temp = ((RCC->CFGR >> 10) & 0x7);
@@ -102,7 +129,7 @@ uint32_t RCC_GetPCLK1Value(void) {
 	uint32_t tempreg = 0;
 
 	// Ack Control bit
-	tempreg |= pI2CHandle->I2C_Config.I2C_AckControl << 10;
+	tempreg |= pI2CHandle->I2C_Config.I2C_ACKControl << 10;
 	pI2CHandle->pI2Cx->I2C_CR1 = tempreg;
 
 	// Configure the FREQ fields
@@ -137,3 +164,51 @@ uint32_t RCC_GetPCLK1Value(void) {
 	}
 	pI2CHandle->pI2Cx->I2C_CCR = tempreg;
 }
+
+
+ /*
+  * I2C get flag status function.
+  */
+ uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName) {
+ 	if (pI2Cx->I2C_SR1 & FlagName) {
+ 		return FLAG_SET;
+ 	}
+ 	return FLAG_RESET;
+ }
+
+
+/*
+ * Send data as a master node via I2C.
+ */
+ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SlaveAddr) {
+	 // Generate the Start condition.
+	 I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
+
+	 // Confirm that the start generation has completed by checking whether SB has been cleared.
+	 while( ! I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_SB));
+
+	 // Send the address of the desired slave with r/nw bit set.
+	 I2C_ExecuteAddressPhase(pI2CHandle->pI2Cx, SlaveAddr);
+
+	 // Confirm that the ADDR flag in SR1 is
+	 while( ! I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_ADDR));
+
+	 // Clear the ADDR flag by reading SR1 and then SR2.
+	 I2C_ClearADDRFlag(pI2CHandle->pI2Cx);
+
+	 // Send data until the length becomes zero.
+	 while(len > 0){
+		 while( ! I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TXE)); // Wait until the transmit buffer is empty.
+		 pI2CHandle->pI2Cx->I2C_DR = *pTxBuffer;
+		 pTxBuffer++;
+		 len--;
+	 }
+
+	 while( ! I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_TXE));
+	 while( ! I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_FLAG_BTF));
+
+	 I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+ }
+
+
+

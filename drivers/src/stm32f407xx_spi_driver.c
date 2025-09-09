@@ -112,7 +112,7 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTxBuffer, uint32_t len) {
 	while(len > 0){
 
 		// Wait until the TX buffer is empty.
-		while(SPI_GetFlagStatus(pSPIx, SPI_TXE_FLAG)  == FLAG_RESET);
+		while(SPI_GetFlagStatus(pSPIx, SPI_TXE_FLAG)  == (uint8_t)FLAG_RESET);
 
 		// Check the data frame format, 16bit or 8bit.
 		if((pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
@@ -138,7 +138,7 @@ void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRxBuffer, uint32_t len) {
 	while(len > 0){
 
 		// Wait until the RX buffer is full.
-		while(SPI_GetFlagStatus(pSPIx, SPI_RXNE_FLAG)  == FLAG_RESET);
+		while(SPI_GetFlagStatus(pSPIx, SPI_RXNE_FLAG)  == (uint8_t)FLAG_RESET);
 
 		// Check the data frame format, 16bit or 8bit.
 		if((pSPIx->CR1 & (1 << SPI_CR1_DFF))) {
@@ -237,6 +237,46 @@ uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pSPIHandle, uint8_t *pRxBuffer, uint32_t
 	return state;
 }
 
+void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnorDi)
+{
+
+	if(EnorDi == ENABLE)
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ISER0 register
+			*NVIC_ISER0 |= ( 1 << IRQNumber );
+
+		}else if(IRQNumber > 31 && IRQNumber < 64 ) //32 to 63
+		{
+			//program ISER1 register
+			*NVIC_ISER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 64 && IRQNumber < 96 )
+		{
+			//program ISER2 register //64 to 95
+			*NVIC_ISER3 |= ( 1 << (IRQNumber % 64) );
+		}
+	}else
+	{
+		if(IRQNumber <= 31)
+		{
+			//program ICER0 register
+			*NVIC_ICER0 |= ( 1 << IRQNumber );
+		}else if(IRQNumber > 31 && IRQNumber < 64 )
+		{
+			//program ICER1 register
+			*NVIC_ICER1 |= ( 1 << (IRQNumber % 32) );
+		}
+		else if(IRQNumber >= 6 && IRQNumber < 96 )
+		{
+			//program ICER2 register
+			*NVIC_ICER3 |= ( 1 << (IRQNumber % 64) );
+		}
+	}
+
+}
+
 
 void SPI_IRQHandling(SPI_Handle_t *pSPIHandle) {
 	uint8_t temp1, temp2;
@@ -313,13 +353,13 @@ static void spi_rxne_interrupt_handle(SPI_Handle_t *pSPIHandle) {
 		// two bytes of data are being received in 16bit DFF.
 		*((uint16_t*)pSPIHandle->pRxBuffer) = (uint16_t)pSPIHandle->pSPIx->DR;
 		pSPIHandle->RxLen -= 2;	// Reduce the receive length by 2.
-		pSPIHandle->pRxBuffer--; // Move the pointer back by 2 bytes.
-		pSPIHandle->pRxBuffer--;
+		pSPIHandle->pRxBuffer++; // Move the pointer forward by 2 bytes.
+		pSPIHandle->pRxBuffer++;
 	} else {
 		// 8bit DFF
 		*(pSPIHandle->pRxBuffer) = (uint8_t)pSPIHandle->pSPIx->DR;
 		pSPIHandle->RxLen--;
-		pSPIHandle->pRxBuffer--; // Move the pointer back 1 byte.
+		pSPIHandle->pRxBuffer++; // Move the pointer forward 1 byte.
 	}
 
 	if(!pSPIHandle->RxLen) {
@@ -352,6 +392,7 @@ __weak void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle, uint8_t Event
 	// Weak Declaration. Application should override this.
 }
 
+
 void SPI_ClearOVRFlag(SPI_RegDef_t *pSPIx) {
 	uint8_t temp;
 	temp = pSPIx->DR;
@@ -375,4 +416,16 @@ void SPI_CloseReception(SPI_Handle_t *pSPIHandle) {
 	pSPIHandle->pRxBuffer = NULL;
 	pSPIHandle->RxLen = 0;
 	pSPIHandle->RxState = SPI_READY;
+}
+
+void SPI_IRQPriorityConfig(uint8_t IRQNumber,uint32_t IRQPriority)
+{
+	//1. first lets find out the ipr register
+	uint8_t iprx = IRQNumber / 4;
+	uint8_t iprx_section  = IRQNumber %4 ;
+
+	uint8_t shift_amount = ( 8 * iprx_section) + ( 8 - NO_PR_BITS_IMPLEMENTED) ;
+
+	*(  NVIC_PR_BASE_ADDR + iprx ) |=  ( IRQPriority << shift_amount );
+
 }

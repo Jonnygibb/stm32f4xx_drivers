@@ -49,6 +49,23 @@ typedef struct {
 #define I2C_FM_DUTY_2           0
 #define I2C_FM_DUTY_16_9        1
 
+
+/*
+ * I2C related status flag definitions.
+ */
+#define I2C_FLAG_TXE				(1 << I2C_SR1_TXE)
+#define I2C_FLAG_RXNE				(1 << I2C_SR1_RXNE)
+#define I2C_FLAG_SB					(1 << I2C_SR1_SB)
+#define I2C_FLAG_ADDR				(1 << I2C_SR1_ADDR)
+#define I2C_FLAG_BTF				(1 << I2C_SR1_BTF)
+#define I2C_FLAG_STOPF				(1 << I2C_SR1_STOPF)
+#define I2C_FLAG_BERR				(1 << I2C_SR1_BERR)
+#define I2C_FLAG_ARLO				(1 << I2C_SR1_ARLO)
+#define I2C_FLAG_AF					(1 << I2C_SR1_AF)
+#define I2C_FLAG_OVR				(1 << I2C_SR1_OVR)
+#define I2C_FLAG_TIMEOUT			(1 << I2C_SR1_TIMEOUT)
+
+
 /********************************************************************************************
  * 								APIs supported by this driver
  ********************************************************************************************/
@@ -93,6 +110,17 @@ typedef struct {
  void I2C_DeInit(I2C_RegDef_t *pI2Cx);
  
  /******************************************************************************
+  * Sends data over I2C to desired slave device.
+  *
+  * @param *pI2CHandle 	A pointer to the handle structure for an I2C Interface.
+  * @param *pTxBuffer 	A pointer to the buffer containing the data to be sent.
+  * @param len			The length of data to be sent.
+  * @param SlaveAddr	The address of the slave device that should listen for
+  * 					the data.
+  ******************************************************************************/
+ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr);
+
+ /******************************************************************************
   * Checks the status of a user defined flag. List of flags can be found in
   * @FlagName.
   *
@@ -101,6 +129,6 @@ typedef struct {
   * @param FlagName A user defined flag to check the status of.
   *
   */
- uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName);
+uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName);
 
 #endif /* INC_STM32F407XX_I2C`_DRIVER_H_ */
