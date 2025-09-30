@@ -24,11 +24,26 @@ void delay(void)
 }
 
 
+void GPIO_ButtonInit(void)
+{
+	GPIO_Handle_t GPIOBtn;
+
+	//this is btn gpio configuration
+	GPIOBtn.pGPIOx = GPIOA;
+	GPIOBtn.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_0;
+	GPIOBtn.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	GPIOBtn.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_HIGH;
+	GPIOBtn.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_NO_PUPD;
+
+	GPIO_Init(&GPIOBtn);
+
+}
+
 void I2C1_GPIOInits(void)
 {
 	/*
 	 * PB6 --> I2C1_SCL
-	 * PB9 --> I2C1_SDA
+	 * PB7 --> I2C1_SDA
 	 */
 
 	//Configuration of the GPIO Pins to act as the I2C1 interface.
@@ -46,7 +61,7 @@ void I2C1_GPIOInits(void)
 	GPIO_Init(&I2CPins);
 
 	// SDA
-	I2CPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_9;
+	I2CPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_7;
 	GPIO_Init(&I2CPins);
 }
 
@@ -139,6 +154,8 @@ void Slave_GPIO_InterruptPinInit(void)
 
 int main(void)
 {
+	GPIO_ButtonInit();
+
 	I2C1_GPIOInits();
 
 	I2C1_Inits();
