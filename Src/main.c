@@ -8,7 +8,7 @@
 
 // I2C Globals
 I2C_Handle_t I2C1handle;
-uint8_t some_data[] = "Test Message for I2C master tx\n";
+uint8_t rcv_buffer[32];
 
 // SPI Globals
 SPI_Handle_t SPI2handle;
@@ -154,6 +154,8 @@ void Slave_GPIO_InterruptPinInit(void)
 
 int main(void)
 {
+	uint8_t commandCode, len;
+
 	GPIO_ButtonInit();
 
 	I2C1_GPIOInits();
@@ -162,12 +164,25 @@ int main(void)
 
 	I2C_PeripheralControl(I2C1handle.pI2Cx, ENABLE);
 
+	// ACK can only be made enabled once the peripheral is enabled.
+	I2C_ManageAcking(I2C1handle.pI2Cx, I2C_ACK_ENABLE);
+
 	while(1) {
 		while(! GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
 
 		delay();
 
-		I2C_MasterSendData(&I2C1handle, some_data, strlen((char*)some_data), SLAVE_ADDR);
+		commandCode = 0x51; // Code to read the len from the slave.
+
+		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR);
+
+		I2C_MasterReceiveData(&I2C1handle, &len, 1, SLAVE_ADDR);
+
+		commandCode = 0x52; // Code to read the data from the slave.
+		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR);
+
+		I2C_MasterReceiveData(&I2C1handle, rcv_buffer, len, SLAVE_ADDR);
+
 	}
 
 	return 0;
