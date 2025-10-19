@@ -2,6 +2,8 @@
 #include <string.h>
 #include "stm32f407xx.h"
 
+extern void initialise_monitor_handles();
+
 #define MAX_LEN 500 //Max len SPI
 #define MY_ADDR 0x61 // Device addr I2C
 #define SLAVE_ADDR 0x68 // Slave device addr I2C
@@ -156,6 +158,10 @@ int main(void)
 {
 	uint8_t commandCode, len;
 
+	initialise_monitor_handles();
+
+	printf("Application is running\n");
+
 	GPIO_ButtonInit();
 
 	I2C1_GPIOInits();
@@ -174,16 +180,20 @@ int main(void)
 
 		commandCode = 0x51; // Code to read the len from the slave.
 
-		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR);
+		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR);
 
-		I2C_MasterReceiveData(&I2C1handle, &len, 1, SLAVE_ADDR);
+		I2C_MasterReceiveData(&I2C1handle, &len, 1, SLAVE_ADDR, I2C_ENABLE_SR);
 
 		commandCode = 0x52; // Code to read the data from the slave.
-		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR);
+		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR);
 
-		I2C_MasterReceiveData(&I2C1handle, rcv_buffer, len, SLAVE_ADDR);
+		I2C_MasterReceiveData(&I2C1handle, rcv_buffer, len, SLAVE_ADDR, I2C_DISABLE_SR);
+
+		rcv_buffer[len+1] = '\0'; // Add null char to received string.
 
 	}
+
+	printf('Message : %s', rcv_buffer);
 
 	return 0;
 

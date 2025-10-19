@@ -24,8 +24,16 @@ typedef struct {
  * Handle Structure for I2X Peripheral
  */
 typedef struct {
-    I2C_RegDef_t *pI2Cx;
-    I2C_Config_t I2C_Config;
+    I2C_RegDef_t 	*pI2Cx;
+    I2C_Config_t 	I2C_Config;
+    uint8_t			*pTxBuffer;
+    uint8_t			*pRxBuffer;
+    uint32_t		TxLen;
+    uint32_t		RxLen;
+    uint8_t			TxRxState;
+    uint8_t			DevAddr;
+    uint32_t		RxSize;
+    uint8_t			Sr;
 } I2C_Handle_t;
 
 /*
@@ -64,6 +72,17 @@ typedef struct {
 #define I2C_FLAG_AF					(1 << I2C_SR1_AF)
 #define I2C_FLAG_OVR				(1 << I2C_SR1_OVR)
 #define I2C_FLAG_TIMEOUT			(1 << I2C_SR1_TIMEOUT)
+
+// Repeated start parameters.
+#define I2C_DISABLE_SR					DISABLE
+#define I2C_ENABLE_SR					ENABLE
+
+/*
+ * I2C Application States
+ */
+#define I2C_READY				0
+#define I2C_BUSY_IN_RX			1
+#define I2C_BUSY_IN_TX			2
 
 
 #define I2C_READ				1
@@ -122,9 +141,22 @@ typedef struct {
   * @param SlaveAddr	The address of the slave device that should listen for
   * 					the data.
   ******************************************************************************/
- void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr);
+ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr, uint8_t Sr);
 
- void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint8_t Len, uint8_t SlaveAddr);
+ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint8_t Len, uint8_t SlaveAddr, uint8_t Sr);
+
+ // Interrupt based versions of I2C Master send/receive.
+ uint8_t I2C_MasterSendDataIT(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr, uint8_t Sr);
+
+ uint8_t I2C_MasterReceiveDataIT(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t Len, uint8_t SlaveAddr, uint8_t Sr);
+
+void I2C_IRQInterruptConfig(uint8_t IRQNumber, uint8_t EnOrDi);
+
+void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
+
+void I2C_EV_IRQHandling(I2C_Handle_t *pI2CHandle);
+
+void I2C_ER_IRQHandling(I2C_Handle_t *pI2CHandle);
 
  /******************************************************************************
   * Checks the status of a user defined flag. List of flags can be found in
