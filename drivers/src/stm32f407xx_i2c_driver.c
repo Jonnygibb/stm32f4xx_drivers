@@ -404,30 +404,71 @@ void I2C_EV_IRQHandling(I2C_Handle_t *pI2CHandle) {
 
 	if(temp1 && temp3) {
 		// SB Flag is set
+
+		if(pI2CHandle->TxRxState == I2C_BUSY_IN_TX){
+			I2C_ExecuteAddressPhase(pI2CHandle->pI2Cx, pI2CHandle->DevAddr, I2C_WRITE);
+		} else if(pI2CHandle->TxRxState == I2C_BUSY_IN_RX) {
+			I2C_ExecuteAddressPhase(pI2CHandle->pI2Cx, pI2CHandle->DevAddr, I2C_READ);
+		}
 	}
 
 	temp3 = pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_ADDR);
 
 	if(temp1 && temp3) {
 		// ADDR Flag is set
+		I2C_ClearADDRFlag(pI2CHandle->pI2Cx);
 	}
 
 	temp3 = pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_BTF);
 
 	if(temp1 && temp3) {
 		// BTF Flag is set
+		if(pI2CHandle->TxRxState == I2C_BUSY_IN_TX){
+			// Make sure that TXE is also set.
+			if(pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_TXE)) {
+				// BTF & TXE = 1
+				if(pI2CHandle->TxLen == 0) {
+					// Generate STOP condition.
+					if(pI2CHandle->Sr == I2C_DISABLE_SR) {
+						I2C_GenerateStopCondition(pI2CHandle->pI2Cx);
+					}
+
+					// Reset the member elements of the handle structure.
+					I2C_CloseSendData();
+
+					// Notify the application about a complete transmission.
+					I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_TX_CMPLT);
+				}
+			}
+		} else if(pI2CHandle->TxRxState == I2C_BUSY_IN_RX) {
+			;
+		}
 	}
 
 	temp3 = pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_STOPF);
 
 	if(temp1 && temp3) {
 		// STOP Flag is set
+		pI2CHandle->pI2Cx->I2C_CR1 |= 0x0000;
+		// Notify the application that the STOP condition has been detected.
+		I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_STOP);
 	}
 
 	temp3 = pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_TXE);
 
 	if(temp1 && temp2 && temp3) {
 		// TXE Flag is set
+		// Data Transmission is needed.
+		if(pI2CHandle->TxRxState == I2C_BUSY_IN_TX) {
+			if(pI2CHandle->TxLen > 0) {
+				// Load the data into the DR
+				pI2CHandle->pI2Cx->I2C_DR = *(pI2CHandle->pTxBuffer);
+				// Decrement the TxLen
+				pI2CHandle->TxLen--;
+				// Increment the buffer
+				pI2CHandle->pTxBuffer++;
+			}
+		}
 	}
 
 	temp3 = pI2CHandle->pI2Cx->I2C_SR1 & (1 << I2C_SR1_RXNE);
