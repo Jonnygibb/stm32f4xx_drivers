@@ -78,6 +78,20 @@ typedef struct {
 #define I2C_ENABLE_SR					ENABLE
 
 /*
+ * I2C Application Events Macros
+ */
+#define I2C_EV_TX_CMPLT			0
+#define I2C_EV_RX_CMPLT			1
+#define I2C_EV_STOP				2
+#define I2C_ERROR_BERR			3
+#define I2C_ERROR_ARLO			4
+#define I2C_ERROR_AF			5
+#define I2C_ERROR_OVR			6
+#define I2C_ERROR_TIMEOUT		7
+#define I2C_EV_DATA_REQ			8
+#define I2C_EV_DATA_RCV			9
+
+/*
  * I2C Application States
  */
 #define I2C_READY				0
@@ -157,6 +171,14 @@ void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 void I2C_EV_IRQHandling(I2C_Handle_t *pI2CHandle);
 
 void I2C_ER_IRQHandling(I2C_Handle_t *pI2CHandle);
+
+void I2C_CloseReceiveData(I2C_Handle_t *pI2CHandle);
+
+void I2C_CloseSendData(I2C_Handle_t *pI2CHandle);
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv);
+
+void I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
 
  /******************************************************************************
   * Checks the status of a user defined flag. List of flags can be found in

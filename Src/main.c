@@ -8,6 +8,8 @@ extern void initialise_monitor_handles();
 #define MY_ADDR 0x61 // Device addr I2C
 #define SLAVE_ADDR 0x68 // Slave device addr I2C
 
+uint8_t rxCmplt = RESET;
+
 // I2C Globals
 I2C_Handle_t I2C1handle;
 uint8_t rcv_buffer[32];
@@ -168,6 +170,10 @@ int main(void)
 
 	I2C1_Inits();
 
+	// I2C IRQ Configurations
+	I2C_IRQInterruptConfig(IRQ_NO_I2C1_EV, ENABLE);
+	I2C_IRQInterruptConfig(IRQ_NO_I2C1_ER, ENABLE);
+
 	I2C_PeripheralControl(I2C1handle.pI2Cx, ENABLE);
 
 	// ACK can only be made enabled once the peripheral is enabled.
@@ -180,20 +186,24 @@ int main(void)
 
 		commandCode = 0x51; // Code to read the len from the slave.
 
-		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR);
+		while (I2C_MasterSendDataIT(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
 
-		I2C_MasterReceiveData(&I2C1handle, &len, 1, SLAVE_ADDR, I2C_ENABLE_SR);
+		while (I2C_MasterReceiveDataIT(&I2C1handle, &len, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
+
+		rxCmplt = RESET;
 
 		commandCode = 0x52; // Code to read the data from the slave.
-		I2C_MasterSendData(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR);
+		while (I2C_MasterSendDataIT(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
 
-		I2C_MasterReceiveData(&I2C1handle, rcv_buffer, len, SLAVE_ADDR, I2C_DISABLE_SR);
+		while (I2C_MasterReceiveDataIT(&I2C1handle, rcv_buffer, len, SLAVE_ADDR, I2C_DISABLE_SR) != I2C_READY);
+
+		while(rxCmplt != SET);
 
 		rcv_buffer[len+1] = '\0'; // Add null char to received string.
 
-	}
+		rxCmplt = RESET;
 
-	printf('Message : %s', rcv_buffer);
+	}
 
 	return 0;
 
@@ -279,6 +289,32 @@ void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle,uint8_t AppEv)
 					i = 0;
 				}
 	}
+
+}
+
+void I2C1_EV_IRQHandler(void) {
+	I2C_EV_IRQHandling(&I2C1handle);
+}
+
+void I2C1_ER_IRQHandler(void){
+	I2C_ER_IRQHandling(&I2C1handle);
+}
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv) {
+	if(AppEv == I2C_EV_TX_CMPLT) {
+		printf("Tx is completed\n");
+	} else if(AppEv == I2C_EV_RX_CMPLT) {
+		printf("Rx is completed\n");
+		rxCmplt = SET;
+	} else if (AppEv == I2C_ERROR_AF) {
+		printf("Ack Failure!\n");
+		I2C_CloseSendData(&I2C1handle);
+		I2C_GenerateStopCondition(I2C1);
+
+		// Wait in here indefinintely
+		while(1);
+	}
+
 
 }
 
