@@ -155,9 +155,13 @@ typedef struct {
   * @param SlaveAddr	The address of the slave device that should listen for
   * 					the data.
   ******************************************************************************/
- void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr, uint8_t Sr);
+void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr, uint8_t Sr);
 
- void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint8_t Len, uint8_t SlaveAddr, uint8_t Sr);
+void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint8_t Len, uint8_t SlaveAddr, uint8_t Sr);
+
+void I2C_SlaveSendData(I2C_RegDef_t *pI2Cx, uint8_t data);
+
+uint8_t I2C_SlaveReceiveData(I2C_RegDef_t *pI2Cx);
 
  // Interrupt based versions of I2C Master send/receive.
  uint8_t I2C_MasterSendDataIT(I2C_Handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t SalveAddr, uint8_t Sr);
