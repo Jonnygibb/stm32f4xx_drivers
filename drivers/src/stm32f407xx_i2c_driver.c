@@ -181,6 +181,7 @@ uint32_t RCC_GetPCLK1Value(void) {
 	pI2CHandle->pI2Cx->I2C_CR2 = (tempreg & 0x3F);
 
 	// Configure the devices own address
+	tempreg = 0;
 	tempreg |= pI2CHandle->I2C_Config.I2C_DeviceAddress << 1;
 	tempreg |= (1 << 14);
 	pI2CHandle->pI2Cx->I2C_OAR1 = tempreg;
@@ -336,7 +337,7 @@ void I2C_MasterReceiveData(I2C_Handle_t *pI2CHandle, uint8_t *pRxBuffer, uint8_t
  			*pRxBuffer = pI2CHandle->pI2Cx->I2C_DR;
 
  			//increment the buffer address
- 			*pRxBuffer++;
+ 			pRxBuffer++;
 
  		}
 
@@ -602,6 +603,12 @@ void I2C_EV_IRQHandling(I2C_Handle_t *pI2CHandle) {
 			if(pI2CHandle->TxRxState == I2C_BUSY_IN_TX) {
 				I2C_MasterHandleTXEInterrupt(pI2CHandle);
 			}
+		} else {
+			// Slave mode data handling.
+			// Decide whether the device is in transmitter mode.
+			if (pI2CHandle->pI2Cx->I2C_SR2 & (1 << I2C_SR2_TRA)) {
+				I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_REQ);
+			}
 		}
 
 	}
@@ -615,6 +622,12 @@ void I2C_EV_IRQHandling(I2C_Handle_t *pI2CHandle) {
 			if(pI2CHandle->TxRxState == I2C_BUSY_IN_RX) {
 				// Data Reception is needed.
 				I2C_MasterHandleRXNEInterrupt(pI2CHandle);
+			}
+		} else {
+			// Slave mode data handling.
+			// Make sure the slave is really in reciever mode.
+			if (pI2CHandle->pI2Cx->I2C_SR2 & (1 << I2C_SR2_TRA)) {
+				I2C_ApplicationEventCallback(pI2CHandle, I2C_EV_DATA_RCV);
 			}
 		}
 
@@ -717,6 +730,21 @@ void I2C_ER_IRQHandling(I2C_Handle_t *pI2CHandle) {
 		I2C_ApplicationEventCallback(pI2CHandle, I2C_ERROR_TIMEOUT);
 	}
 
+}
+
+void I2C_SlaveEnableDisableCallbackEvents(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi) {
+	if (EnOrDi == ENABLE)
+	{
+		pI2Cx->I2C_CR2 |= (1 << I2C_CR2_ITEVTEN);
+		pI2Cx->I2C_CR2 |= (1 << I2C_CR2_ITBUFEN);
+		pI2Cx->I2C_CR2 |= (1 << I2C_CR2_ITERREN);
+	}
+	else
+	{
+		pI2Cx->I2C_CR2 &= ~(1 << I2C_CR2_ITEVTEN);
+		pI2Cx->I2C_CR2 &= ~(1 << I2C_CR2_ITBUFEN);
+		pI2Cx->I2C_CR2 &= ~(1 << I2C_CR2_ITERREN);
+	}
 }
 
 

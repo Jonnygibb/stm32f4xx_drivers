@@ -3,6 +3,7 @@
 Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx microcontroller.
 
 - [Volatile Keyword](#volatile-keyword)
+- [Danger of Static Variables](#danger-of-static-variables)
 - [Enabling Clocks](#enabling-clocks)
 - [Pre-processor Directives and Operator Precedence](#pre-processor-directives-and-operator-precedence)
 - [Header file documentation](#header-file-documentation)
@@ -37,6 +38,26 @@ int main() {
 ```
 
 Now that the volatile keyword is in place, the compiler knows that the memory location EXAMPLE_SRAM_ADDRESS is subject to a change in value.
+
+## Danger of Static Variables
+
+Some functions may define variables with the static keyword. The static keyword in this usecase allocates the memory for this variable in
+a static memory location rather than in automated memory allocation. This means that the variable will maintain its value through different
+invocations of the function.
+
+```c
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv) {
+
+	static uint8_t commandCode = 0;
+	static uint8_t cnt = 0;
+	
+	commandCode++;
+	cnt++
+}
+```
+
+Both these variables will keep their value and not be reinitaited to 0. However, statics can be dangerous in threaded applications since
+many threads may attempt to access the variables at once leading to race conditions and potential for unpredicatable behaviour.
 
 ## Enabling Clocks
 

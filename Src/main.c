@@ -8,11 +8,10 @@ extern void initialise_monitor_handles();
 #define MY_ADDR 0x61 // Device addr I2C
 #define SLAVE_ADDR 0x68 // Slave device addr I2C
 
-uint8_t rxCmplt = RESET;
-
 // I2C Globals
 I2C_Handle_t I2C1handle;
 uint8_t rcv_buffer[32];
+uint8_t tx_buffer[32] = "STM32 Slave Mode Test Msg";
 
 // SPI Globals
 SPI_Handle_t SPI2handle;
@@ -114,7 +113,7 @@ void I2C1_Inits(void)
 {
 	I2C1handle.pI2Cx = I2C1;
 	I2C1handle.I2C_Config.I2C_ACKControl = I2C_ACK_ENABLE;
-	I2C1handle.I2C_Config.I2C_DeviceAddress = MY_ADDR;
+	I2C1handle.I2C_Config.I2C_DeviceAddress = SLAVE_ADDR;
 	I2C1handle.I2C_Config.I2C_FMDutyCycle = I2C_FM_DUTY_2;
 	I2C1handle.I2C_Config.I2C_SCLSpeed = I2C_SCL_SPEED_SM;
 
@@ -158,7 +157,7 @@ void Slave_GPIO_InterruptPinInit(void)
 
 int main(void)
 {
-	uint8_t commandCode, len;
+	//uint8_t commandCode, len;
 
 	initialise_monitor_handles();
 
@@ -174,36 +173,14 @@ int main(void)
 	I2C_IRQInterruptConfig(IRQ_NO_I2C1_EV, ENABLE);
 	I2C_IRQInterruptConfig(IRQ_NO_I2C1_ER, ENABLE);
 
+	I2C_SlaveEnableDisableCallbackEvents(I2C1, ENABLE);
+
 	I2C_PeripheralControl(I2C1handle.pI2Cx, ENABLE);
 
 	// ACK can only be made enabled once the peripheral is enabled.
 	I2C_ManageAcking(I2C1handle.pI2Cx, I2C_ACK_ENABLE);
 
-	while(1) {
-		while(! GPIO_ReadFromInputPin(GPIOA, GPIO_PIN_NO_0));
-
-		delay();
-
-		commandCode = 0x51; // Code to read the len from the slave.
-
-		while (I2C_MasterSendDataIT(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
-
-		while (I2C_MasterReceiveDataIT(&I2C1handle, &len, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
-
-		rxCmplt = RESET;
-
-		commandCode = 0x52; // Code to read the data from the slave.
-		while (I2C_MasterSendDataIT(&I2C1handle, &commandCode, 1, SLAVE_ADDR, I2C_ENABLE_SR) != I2C_READY);
-
-		while (I2C_MasterReceiveDataIT(&I2C1handle, rcv_buffer, len, SLAVE_ADDR, I2C_DISABLE_SR) != I2C_READY);
-
-		while(rxCmplt != SET);
-
-		rcv_buffer[len+1] = '\0'; // Add null char to received string.
-
-		rxCmplt = RESET;
-
-	}
+	while(1);
 
 	return 0;
 
@@ -301,18 +278,41 @@ void I2C1_ER_IRQHandler(void){
 }
 
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv) {
-	if(AppEv == I2C_EV_TX_CMPLT) {
-		printf("Tx is completed\n");
-	} else if(AppEv == I2C_EV_RX_CMPLT) {
-		printf("Rx is completed\n");
-		rxCmplt = SET;
-	} else if (AppEv == I2C_ERROR_AF) {
-		printf("Ack Failure!\n");
-		I2C_CloseSendData(&I2C1handle);
-		I2C_GenerateStopCondition(I2C1);
 
-		// Wait in here indefinintely
-		while(1);
+	static uint8_t commandCode = 0;
+	static uint8_t cnt = 0;
+
+	if (AppEv == I2C_EV_DATA_REQ)
+	{
+		// Master device has requested data.
+		// Slave device has to send data.
+		if (commandCode == 0x51)
+		{
+			// Send the length of of the tx buffer.
+			I2C_SlaveSendData(pI2CHandle->pI2Cx, strlen((char*)tx_buffer));
+		}
+		else if (commandCode == 0x52)
+		{
+			// Send the contents of the tx buffer.
+			I2C_SlaveSendData(pI2CHandle->pI2Cx, tx_buffer[cnt++]);
+		}
+
+	}
+	else if (AppEv == I2C_EV_DATA_RCV) {
+		// Slave has to recieve data.
+		commandCode = I2C_SlaveReceiveData(pI2CHandle->pI2Cx);
+
+	}
+	else if (AppEv == I2C_ERROR_AF) {
+		// This can only happen during slave transmission.
+		// Master device replied with a NACK and doesnt need more data.
+		commandCode = 0xFF;
+		cnt = 0;
+
+	}
+	else if (AppEv == I2C_EV_STOP) {
+		// This can only happen during slave reception.
+		// Master device has ended communication with the slave.
 	}
 
 

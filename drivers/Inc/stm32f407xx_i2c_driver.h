@@ -184,6 +184,8 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv);
 
 void I2C_GenerateStopCondition(I2C_RegDef_t *pI2Cx);
 
+void I2C_SlaveEnableDisableCallbackEvents(I2C_RegDef_t *pI2Cx, uint8_t EnOrDi);
+
  /******************************************************************************
   * Checks the status of a user defined flag. List of flags can be found in
   * @FlagName.
