@@ -28,15 +28,15 @@ typedef struct {
 typedef struct {
 	USART_RegDef_t* pUSARTx;
 	USART_Config_t USART_Config;
-};
+} USART_Handle_t;
 
 /*
  *@USART_Mode
  *Possible options for USART_Mode
  */
-#define USART_MODE_ONLY_TX 0
-#define USART_MODE_ONLY_RX 1
-#define USART_MODE_TXRX  2
+#define USART_MODE_ONLY_TX 					0
+#define USART_MODE_ONLY_RX 					1
+#define USART_MODE_TXRX  					2
 
 /*
  *@USART_Baud
@@ -60,34 +60,48 @@ typedef struct {
  *@USART_ParityControl
  *Possible options for USART_ParityControl
  */
-#define USART_PARITY_EN_ODD   2
-#define USART_PARITY_EN_EVEN  1
-#define USART_PARITY_DISABLE   0
+#define USART_PARITY_EN_ODD   				2
+#define USART_PARITY_EN_EVEN  				1
+#define USART_PARITY_DISABLE   				0
 
 /*
  *@USART_WordLength
  *Possible options for USART_WordLength
  */
-#define USART_WORDLEN_8BITS  0
-#define USART_WORDLEN_9BITS  1
+#define USART_WORDLEN_8BITS  				0
+#define USART_WORDLEN_9BITS  				1
 
 /*
  *@USART_NoOfStopBits
  *Possible options for USART_NoOfStopBits
  */
-#define USART_STOPBITS_1     0
-#define USART_STOPBITS_0_5   1
-#define USART_STOPBITS_2     2
-#define USART_STOPBITS_1_5   3
+#define USART_STOPBITS_1     				0
+#define USART_STOPBITS_0_5   				1
+#define USART_STOPBITS_2     				2
+#define USART_STOPBITS_1_5   				3
 
 /*
  *@USART_HWFlowControl
  *Possible options for USART_HWFlowControl
  */
-#define USART_HW_FLOW_CTRL_NONE    	0
-#define USART_HW_FLOW_CTRL_CTS    	1
-#define USART_HW_FLOW_CTRL_RTS    	2
-#define USART_HW_FLOW_CTRL_CTS_RTS	3
+#define USART_HW_FLOW_CTRL_NONE    			0
+#define USART_HW_FLOW_CTRL_CTS    			1
+#define USART_HW_FLOW_CTRL_RTS    			2
+#define USART_HW_FLOW_CTRL_CTS_RTS			3
+
+/*
+ * USART status flags.
+ */
+#define USART_FLAG_EN		(1 << USART_SR1_EN)
+#define USART_FLAG_FE		(1 << USART_SR1_FE)
+#define USART_FLAG_NF		(1 << USART_SR1_NF)
+#define USART_FLAG_ORE		(1 << USART_SR1_ORE)
+#define USART_FLAG_IDLE		(1 << USART_SR1_IDLE)
+#define USART_FLAG_RXNE		(1 << USART_SR1_RXNE)
+#define USART_FLAG_TC		(1 << USART_SR1_TC)
+#define USART_FLAG_TXE		(1 << USART_SR1_TXE)
+#define USART_FLAG_LBD		(1 << USART_SR1_LBD)
+#define USART_FLAG_CTS		(1 << USART_SR1_CTS)
 
 
 

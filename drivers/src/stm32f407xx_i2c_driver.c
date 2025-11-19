@@ -223,7 +223,8 @@ uint32_t RCC_GetPCLK1Value(void) {
   * I2C get flag status function.
   */
  uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t FlagName) {
- 	if (pI2Cx->I2C_SR1 & FlagName) {
+ 	if (pI2Cx->I2C_SR1 & FlagName)
+ 	{
  		return FLAG_SET;
  	}
  	return FLAG_RESET;
