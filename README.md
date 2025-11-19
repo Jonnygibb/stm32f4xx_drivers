@@ -21,23 +21,22 @@ The compiler does this since reading values from memory is time consuming, so wh
 ```c
 #include <stdint.h>
 
-#define EXAMPLE_SRAM_ADDRESS     (0x20000004U)
+#define HARDWARE_COUNTER_ADDRESS	(0x50003004U)
 
 int main() {
-		uint32_t    value = 0;
-		uint32_t volatile *pointer = (uint32_t*) EXAMPLE_SRAM_ADDRESS;
-		
-		while(1) {
-				if(value) break;
+	int volatile *hardware_counter = (int*) HARDWARE_COUNTER_ADDRESS;
+	
+	while(1)
+	{
+		if (*hardware_counter > 6)
+		{
+			return 1;
 		}
-		
-		while(1);
-		
-		return 0;
+	}
 }
 ```
 
-Now that the volatile keyword is in place, the compiler knows that the memory location EXAMPLE_SRAM_ADDRESS is subject to a change in value.
+In this example, the hardware has a counter value that will increase by itself without the software necessarily knowing the value has changed. By including the volatile keyword, the compiler will always check the latest value of that variable. 
 
 ## Danger of Static Variables
 

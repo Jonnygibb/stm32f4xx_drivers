@@ -198,6 +198,16 @@ typedef struct {
 	__vo uint32_t I2C_FLTR;				// I2C FLTR Register. Offset: 0x24
 } I2C_RegDef_t;
 
+typedef struct {
+	__vo uint32_t USART_SR;				// USART Status Register. Offset: 0x00
+	__vo uint32_t USART_DR;				// USART Data Register. Offset: 0x04
+	__vo uint32_t USART_BRR;			// USART Baud Rate Register. Offset: 0x08
+	__vo uint32_t USART_CR1;			// USART Control Register 1. Offset: 0x0C
+	__vo uint32_t USART_CR2;			// USART Control Register 2. Offset: 0x10
+	__vo uint32_t USART_CR3;			// USART Control Register 3. Offset: 0x14
+	__vo uint32_t USART_GTPR;			// USART Guard Time and Prescalar. Offset: 0x18
+} USART_RegDef_t;
+
 /*
  * Peripheral Definitions (type-casted pointers to address in memory)
  */
@@ -222,6 +232,13 @@ typedef struct {
 #define I2C1						((I2C_RegDef_t*)I2C1_BASEADDR)
 #define I2C2						((I2C_RegDef_t*)I2C2_BASEADDR)
 #define I2C3						((I2C_RegDef_t*)I2C3_BASEADDR)
+
+#define USART1						((USART_RegDef_t)USART1_BASEADDR)
+#define USART2						((USART_RegDef_t)USART2_BASEADDR)
+#define USART3						((USART_RegDef_t)USART3_BASEADDR)
+#define USART4						((USART_RegDef_t)USART4_BASEADDR)
+#define USART5						((USART_RegDef_t)USART5_BASEADDR)
+#define USART6						((USART_RegDef_t)USART6_BASEADDR)
 
 #define RCC							((RCC_RegDef_t*)RCC_BASEADDR)
 #define EXTI						((EXTI_RegDef_t*)EXTI_BASEADDR)
@@ -487,5 +504,6 @@ typedef struct {
 #include "stm32f407xx_gpio_driver.h"
 #include "stm32f407xx_spi_driver.h"
 #include "stm32f407xx_i2c_driver.h"
+#include "stm32f407xx_usart_driver.h"
 
 #endif /* INC_STM32F407XX_H_ */
