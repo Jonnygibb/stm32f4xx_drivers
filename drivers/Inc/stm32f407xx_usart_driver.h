@@ -133,6 +133,7 @@ void USART_PeriClockControl(USART_RegDef_t *pUSARTx, uint8_t EnorDi);
  */
 void USART_Init(USART_Handle_t *pUSARTHandle);
 void USART_DeInit(USART_RegDef_t *pUSARTx);
+void USART_SetBaudRate(USART_RegDef_t *pUSARTx, uint32_t BaudRate);
 
 
 /*
