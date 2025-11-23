@@ -1,3 +1,14 @@
+# STM32f407xx Drivers
+
+This repository houses GPIO, I2C, SPI and UART drivers for the stm32f407xx microcontroller. These drivers include APIs for interrupt based and blocking style send and recieve functions.
+The drivers were tested by myself using a logic analyser and a series of arduino scripts to act as another communication device. An example setup can be seen in the image below.
+
+![Example setup for testing of stm32f407xx drivers](images/microcontroller_setup.JPEG)
+
+The code here was all written by myself apart from some exercises which were completed as part of the udemy course "(MCU1) Learn bare metal driver development using Embedded C" by Kiran Nayak (which I highly recommend). 
+The drivers are not necessarily complete however functionally all the features I was looking to learn have been added. I've documented many of the learnings from this project in the section below.
+
+
 # Microcontroller Learnings
 
 Concepts and tricks that I learnt whilst writing the drivers for the stm32f47xx microcontroller.
