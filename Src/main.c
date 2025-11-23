@@ -20,6 +20,13 @@ char RcvBuff[MAX_LEN];
 volatile uint8_t rcvStop = 0;
 volatile uint8_t dataAvailable = 0; // Flag that is set on trigger of GPIO interrupt.
 
+// UART Globals
+USART_Handle_t USART2Handle;
+char *msg[3] = {"Example Sentence with Different Cases", "Hello How are you ?" , "Jonny is sometimes a reasonably good coder"};
+char rx_buf[1024] ; //reply from arduino will be stored here
+uint8_t rxCmplt = RESET;  //This flag indicates reception completion
+uint8_t g_data = 0;
+
 // Arbitrary delay function.
 void delay(void)
 {
@@ -108,6 +115,22 @@ void SPI2_GPIOInits(void)
 	GPIO_Init(&SPIPins);
 }
 
+void USART2_GPIOInits(void) {
+	GPIO_Handle_t USARTPins;
+
+	USARTPins.pGPIOx = GPIOA;
+	USARTPins.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	USARTPins.GPIO_PinConfig.GPIO_PinOPType = GPIO_OP_TYPE_PP;
+	USARTPins.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PIN_PU;
+	USARTPins.GPIO_PinConfig.GPIO_PinSpeed = GPIO_SPEED_VERY_HIGH;
+	USARTPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_3;
+	USARTPins.GPIO_PinConfig.GPIO_PinAltFunMode = 7;
+	GPIO_Init(&USARTPins);
+
+	USARTPins.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_NO_2;
+	GPIO_Init(&USARTPins);
+}
+
 
 void I2C1_Inits(void)
 {
@@ -134,6 +157,17 @@ void SPI2_Inits(void)
 	SPI_Init(&SPI2handle);
 }
 
+void USART2_Init(void) {
+	USART2Handle.pUSARTx = USART2;
+	USART2Handle.USART_Config.USART_Baud = USART_STD_BAUD_115200;
+	USART2Handle.USART_Config.USART_HWFlowControl = USART_HW_FLOW_CTRL_NONE;
+	USART2Handle.USART_Config.USART_Mode = USART_MODE_TXRX;
+	USART2Handle.USART_Config.USART_NoOfStopBits = USART_STOPBITS_1;
+	USART2Handle.USART_Config.USART_WordLength = USART_WORDLEN_8BITS;
+	USART2Handle.USART_Config.USART_ParityControl = USART_PARITY_DISABLE;
+	USART_Init(&USART2Handle);
+}
+
 
 // Configures the GPIO pin for interrupt to receive data.
 void Slave_GPIO_InterruptPinInit(void)
@@ -157,34 +191,65 @@ void Slave_GPIO_InterruptPinInit(void)
 
 int main(void)
 {
-	//uint8_t commandCode, len;
+
+	int32_t cnt = 0;
+
 
 	initialise_monitor_handles();
 
+	USART2_GPIOInits();
+	USART2_Init();
+
+	USART_IRQInterruptConfig(IRQ_NO_USART2, ENABLE);
+
+	USART_PeripheralControl(USART2, ENABLE);
+
 	printf("Application is running\n");
 
-	GPIO_ButtonInit();
+	//do forever
+	while(1)
+	{
+		//wait till button is pressed
+		while( ! GPIO_ReadFromInputPin(GPIOA,GPIO_PIN_NO_0) );
 
-	I2C1_GPIOInits();
+		//to avoid button de-bouncing related issues 200ms of delay
+		delay();
 
-	I2C1_Inits();
+		// Next message index ; make sure that cnt value doesn't cross 2
+		cnt = cnt % 3;
 
-	// I2C IRQ Configurations
-	I2C_IRQInterruptConfig(IRQ_NO_I2C1_EV, ENABLE);
-	I2C_IRQInterruptConfig(IRQ_NO_I2C1_ER, ENABLE);
+		//First lets enable the reception in interrupt mode
+		//this code enables the receive interrupt
+		while ( USART_ReceiveDataIT(&USART2Handle, (uint8_t*)rx_buf, strlen(msg[cnt])) != USART_READY );
 
-	I2C_SlaveEnableDisableCallbackEvents(I2C1, ENABLE);
+		//Send the msg indexed by cnt in blocking mode
+		USART_SendData(&USART2Handle,(uint8_t*)msg[cnt],strlen(msg[cnt]));
 
-	I2C_PeripheralControl(I2C1handle.pI2Cx, ENABLE);
+		printf("Transmitted : %s\n",msg[cnt]);
 
-	// ACK can only be made enabled once the peripheral is enabled.
-	I2C_ManageAcking(I2C1handle.pI2Cx, I2C_ACK_ENABLE);
 
-	while(1);
+		//Now lets wait until all the bytes are received from the arduino .
+		//When all the bytes are received rxCmplt will be SET in application callback
+		while(rxCmplt != SET);
+
+		//just make sure that last byte should be null otherwise %s fails while printing
+		rx_buf[strlen(msg[cnt])+ 1] = '\0';
+
+		//Print what we received from the arduino
+		printf("Received    : %s\n",rx_buf);
+
+		//invalidate the flag
+		rxCmplt = RESET;
+
+		//move on to next message indexed in msg[]
+		cnt ++;
+	}
+
 
 	return 0;
-
 }
+
+
 
 
 void SPI_send_recieve_example() {
@@ -316,6 +381,27 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t AppEv) {
 	}
 
 
+}
+
+void USART2_IRQHandler(void)
+{
+	USART_IRQHandling(&USART2Handle);
+}
+
+
+
+
+
+void USART_ApplicationEventCallback( USART_Handle_t *pUSARTHandle,uint8_t ApEv)
+{
+   if(ApEv == USART_EVENT_RX_CMPLT)
+   {
+			rxCmplt = SET;
+
+   }else if (ApEv == USART_EVENT_TX_CMPLT)
+   {
+	   ;
+   }
 }
 
 /* Slave data available interrupt handler */

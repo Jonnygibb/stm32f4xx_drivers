@@ -391,6 +391,13 @@ typedef struct {
 #define IRQ_NO_I2C2_ER		41
 #define IRQ_NO_I2C3_EV		79
 #define IRQ_NO_I2C3_ER		80
+
+#define IRQ_NO_USART1	    37
+#define IRQ_NO_USART2	    38
+#define IRQ_NO_USART3	    39
+#define IRQ_NO_UART4	    52
+#define IRQ_NO_UART5	    53
+#define IRQ_NO_USART6	    71
 /*
  * Interrupt priority macros.
  */
